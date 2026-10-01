@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { Icon } from '../../../components/Icon';
 import { Toggle } from '../../../components/Toggle';
 import { UiButton } from '../../../components/UiButton';
+import { uploadProductImage } from '../../../lib/api';
 import type { Category, PriceUnit, Product, StockStatus } from '../../../lib/types';
 
-export type ProductFormValue = Partial<Product> & {
-  images: { id: string; url: string; alt_text: string; position: number }[];
+export type ProductFormValue = Omit<Partial<Product>, 'images'> & {
+  images: { id: string; url: string; alt_text: string; position: number; previewUrl?: string }[];
 };
 
 function Field({
@@ -58,14 +59,17 @@ export function ProductForm({
   const [value, setValue] = useState<ProductFormValue>(initial);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   const set = <K extends keyof ProductFormValue>(key: K, v: ProductFormValue[K]) =>
     setValue((prev) => ({ ...prev, [key]: v }));
 
-  const setImage = (index: number, url: string) =>
+  const setImage = (index: number, url: string, previewUrl?: string) =>
     setValue((prev) => ({
       ...prev,
-      images: prev.images.map((img, i) => (i === index ? { ...img, url } : img)),
+      images: prev.images.map((img, i) =>
+        i === index ? { ...img, url, ...(previewUrl !== undefined ? { previewUrl } : {}) } : img,
+      ),
     }));
 
   const addImage = () =>
@@ -79,6 +83,28 @@ export function ProductForm({
 
   const removeImage = (index: number) =>
     setValue((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+
+  const handleFileSelect = async (index: number, file: File | undefined) => {
+    if (!file) return;
+    setError('');
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file (JPG, PNG, WebP…).');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be 10MB or smaller.');
+      return;
+    }
+    setUploadingIndex(index);
+    try {
+      const uploaded = await uploadProductImage(file);
+      setImage(index, uploaded.url, uploaded.preview_url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image upload failed.');
+    } finally {
+      setUploadingIndex(null);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,13 +139,22 @@ export function ProductForm({
       <section className="rounded-2xl border border-hairline bg-white p-5" aria-label="Gallery">
         <h2 className="text-[16px] font-semibold text-ink">Gallery</h2>
         <p className="mt-1 text-[13px] text-muted">
-          Paste image URLs for now — direct upload to R2 is coming soon.
+          Upload images straight to your R2 bucket — or paste an image URL instead.
         </p>
         <div className="mt-4 flex flex-col gap-3">
           {value.images.map((img, i) => (
             <div key={img.id} className="flex items-center gap-2">
               {img.url ? (
-                <img src={img.url} alt="" className="h-14 w-11 shrink-0 rounded-lg bg-accentWash object-cover" />
+                <img
+                  src={img.url}
+                  alt=""
+                  className="h-14 w-11 shrink-0 rounded-lg bg-accentWash object-cover"
+                  onError={(e) => {
+                    if (img.previewUrl && e.currentTarget.src !== img.previewUrl) {
+                      e.currentTarget.src = img.previewUrl;
+                    }
+                  }}
+                />
               ) : (
                 <span className="flex h-14 w-11 shrink-0 items-center justify-center rounded-lg bg-accentWash text-faint">
                   <Icon name="image" className="text-xl" />
@@ -136,6 +171,24 @@ export function ProductForm({
                 placeholder="https://…"
                 className={`${inputCls} flex-1`}
               />
+              <label
+                className={`inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-hairline px-3 text-[13px] font-medium text-accent hover:border-accent ${
+                  uploadingIndex !== null ? 'pointer-events-none opacity-50' : ''
+                }`}
+              >
+                <Icon name="upload" className="text-lg" />
+                {uploadingIndex === i ? 'Uploading…' : 'Upload'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={uploadingIndex !== null}
+                  onChange={(e) => {
+                    handleFileSelect(i, e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 onClick={() => removeImage(i)}
@@ -152,7 +205,7 @@ export function ProductForm({
             className="inline-flex items-center gap-2 self-start rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-accent hover:border-accent"
           >
             <Icon name="add" className="text-lg" />
-            Add image URL
+            Add image
           </button>
         </div>
       </section>
