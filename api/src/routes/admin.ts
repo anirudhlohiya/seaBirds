@@ -609,6 +609,50 @@ adminRouter.put("/password", async (c) => {
   return ok(c, { updated: true });
 });
 
+// ================================================================ product image uploads
+// Admin uploads product photos from the browser; the Worker streams each file
+// into R2 and returns the public URL + key. The DB keeps the public URL.
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "avif", "gif"]);
+
+adminRouter.post("/images/upload", async (c) => {
+  let form: FormData;
+  try {
+    form = await c.req.formData();
+  } catch {
+    return fail(c, "invalid_body", "Request must be multipart/form-data with a 'file' field.", 400);
+  }
+  const entry = form.get("file");
+  // Duck-type check instead of `instanceof File`: more robust across the
+  // workerd runtime boundary, and keeps tsc happy without DOM lib types.
+  const file: File | null =
+    entry !== null && typeof entry === "object" && "arrayBuffer" in entry ? (entry as File) : null;
+  if (!file) {
+    return fail(c, "invalid_body", "No file received. Send multipart/form-data with a 'file' field.", 400);
+  }
+  const contentType = (file.type || "").toLowerCase();
+  const ext = (file.name.split(".").pop() ?? "").toLowerCase();
+  if (!contentType.startsWith("image/") || !ALLOWED_IMAGE_EXTS.has(ext)) {
+    return fail(c, "unsupported_media_type", "Only image files are allowed (jpg, png, webp, avif, gif).", 415);
+  }
+  if (file.size === 0) {
+    return fail(c, "invalid_body", "Upload body is empty.", 400);
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return fail(c, "payload_too_large", "Image must be 10MB or smaller.", 413);
+  }
+
+  const key = `products/${crypto.randomUUID()}.${ext}`;
+  await c.env.IMAGES.put(key, await file.arrayBuffer(), {
+    httpMetadata: { contentType: file.type || "application/octet-stream" },
+  });
+
+  const base = (c.env.R2_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const origin = new URL(c.req.url).origin.replace(/\/+$/, "");
+  return ok(c, { url: `${base}/${key}`, key, preview_url: `${origin}/api/images/${key}` }, 201);
+});
+
 // ================================================================ catalogue PDFs
 // PDFs are generated client-side in the admin browser and uploaded here as
 // raw bytes; R2 stores the file, catalogue_editions stores the metadata.
