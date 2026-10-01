@@ -24,9 +24,9 @@ id = "b70d4840939446c5bf96cc164515c93f"
 
 [vars]
 # PLACEHOLDER: your Cloudflare Pages domain, e.g. https://sea-birds.pages.dev
-ALLOWED_ORIGIN = "http://localhost:3000"
+ALLOWED_ORIGIN = "https://seabirds.in"
 SESSION_TTL_HOURS = "72"
 # PLACEHOLDER: public base URL serving the IMAGES R2 bucket
 # (R2 custom domain or public bucket URL), e.g. https://images.example.com
 # Catalogue PDFs are served from <R2_PUBLIC_BASE_URL>/catalogues/...
-R2_PUBLIC_BASE_URL = "http://localhost:8787/api/images"
+R2_PUBLIC_BASE_URL = "https://images.seabirds.in"
