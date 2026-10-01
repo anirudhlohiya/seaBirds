@@ -1,0 +1,32 @@
+# Sea Birds catalogue API — Cloudflare Worker
+# Fill in the PLACEHOLDER ids after creating the resources (see README).
+# Never commit real ids/secrets; keep them in `wrangler.toml` locally (gitignored if you prefer .dev.vars).
+
+name = "sea-birds-api"
+main = "api/src/index.ts"
+compatibility_date = "2026-09-01"
+
+# D1 database — create with: wrangler d1 create sea-birds-db
+[[d1_databases]]
+binding = "DB"
+database_name = "sea-birds-db"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# R2 bucket for product images / catalogue PDFs — create with: wrangler r2 bucket create sea-birds-images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "sea-birds-images"
+
+# KV namespace for cache / rate-limit counters — create with: wrangler kv namespace create CACHE
+[[kv_namespaces]]
+binding = "CACHE"
+id = "PLACEHOLDER_KV_NAMESPACE_ID"
+
+[vars]
+# PLACEHOLDER: your Cloudflare Pages domain, e.g. https://sea-birds.pages.dev
+ALLOWED_ORIGIN = "https://www.example.com"
+SESSION_TTL_HOURS = "72"
+# PLACEHOLDER: public base URL serving the IMAGES R2 bucket
+# (R2 custom domain or public bucket URL), e.g. https://images.example.com
+# Catalogue PDFs are served from <R2_PUBLIC_BASE_URL>/catalogues/...
+R2_PUBLIC_BASE_URL = "https://images.example.com"

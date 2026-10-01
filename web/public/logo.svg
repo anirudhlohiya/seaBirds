@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40" viewBox="0 0 160 40" role="img" aria-label="Sea Birds Luxury Textiles">
+  <g fill="#004357">
+    <path d="M4 26c6-1 10-4 12-9l3 2c-1 2-1 4 0 6l4-1c-4 3-9 5-14 5l-5-3z"/>
+    <path d="M18 17c4-4 9-6 14-6-3 2-5 4-6 7 3-1 6-1 9 1-5 1-10 1-14-1l-3-1z"/>
+    <circle cx="30" cy="13" r="1.4"/>
+  </g>
+  <text x="42" y="19" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em" fill="#004357">SEA BIRDS</text>
+  <text x="42" y="32" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="0.32em" fill="#0D5C75">LUXURY TEXTILES</text>
+</svg>

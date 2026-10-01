@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js / static export
+.next/
+out/
+dist/
+
+# cloudflare
+.wrangler/
+.dev.vars
+
+# env (never commit real values)
+.env
+.env*.local
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# misc
+.DS_Store
+*.log
