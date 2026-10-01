@@ -159,8 +159,13 @@ Rebuilding Pages after catalogue edits re-renders product pages (500 builds/mont
 
 ## TODOs / known simplifications
 
-- Admin product image upload currently takes image URLs; direct browser→R2 upload
-  (presigned via Worker) is the next step — R2 binding and bucket already wired.
+- Admin product images upload directly to R2: `POST /api/admin/images/upload`
+  (multipart `file` field, admin session required, ≤10MB, jpg/png/webp/avif/gif)
+  → `{url, key, preview_url}` (201). `url` is the public R2 URL stored in the DB;
+  `preview_url` is served by the Worker via `GET /api/images/<key>` and is used
+  as the in-admin preview fallback where the public R2 base URL isn't configured
+  (e.g. local dev). In production prefer the public R2 URL (edge-cached, zero
+  Worker cost).
 - Enquiry / wishlist / catalogue PDFs are generated client-side with pdf-lib
   (zero deps on the server, zero Worker cost). Catalogue generation embeds product
   images by fetching their URLs at generate time; very large catalogues (100+
