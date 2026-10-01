@@ -60,6 +60,27 @@ publicRouter.get("/health", (c) => {
 
 const SORTS = ["newest", "price_asc", "price_desc", "bestselling"] as const;
 
+// Serves R2 objects (product images) through the API. Used as the preview
+// fallback in the admin form when the public R2 base URL isn't configured
+// (e.g. local dev); in production the public R2 URL is preferred (edge-cached,
+// zero Worker cost).
+publicRouter.get("/images/*", async (c) => {
+  const key = c.req.path.replace(/^\/api\/images\//, "");
+  if (!key || key.includes("..") || !/^[A-Za-z0-9/_.\-]+$/.test(key)) {
+    return fail(c, "invalid_param", "Invalid image key.", 400);
+  }
+  const obj = await c.env.IMAGES.get(key);
+  if (!obj) {
+    return fail(c, "not_found", "Image not found.", 404);
+  }
+  return new Response(obj.body, {
+    headers: {
+      "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+});
+
 publicRouter.get("/products", async (c) => {
   const q = c.req.query();
   const where: string[] = ["p.is_visible = 1"];
