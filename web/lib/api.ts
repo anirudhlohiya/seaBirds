@@ -311,6 +311,43 @@ export function adminDeleteProductImage(productId: string, imageId: string): Pro
   );
 }
 
+export interface UploadedProductImage {
+  url: string;
+  key: string;
+  preview_url: string;
+}
+
+/**
+ * Uploads a product photo to R2 via the Worker. Sends multipart/form-data
+ * (no JSON content-type — the browser sets the multipart boundary itself).
+ */
+export async function uploadProductImage(file: File): Promise<UploadedProductImage> {
+  const token = getAdminToken();
+  const form = new FormData();
+  form.append('file', file);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/api/admin/images/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+  } catch {
+    throw new Error(`Could not reach the API at ${API_BASE}. Is the worker running?`);
+  }
+  if (res.status === 401) {
+    await adminLogout();
+    throw new Error('Session expired. Please sign in again.');
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(apiErrorMessage(text, `Upload failed with status ${res.status}.`));
+  }
+  const data = unwrap<UploadedProductImage>(await res.json());
+  if (!data?.url) throw new Error('Upload failed: no URL returned.');
+  return data;
+}
+
 /**
  * Replaces the product's image set with the form's list.
  * Delete-all + re-add keeps ordering deterministic (the API has no reorder).
