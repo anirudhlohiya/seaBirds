@@ -166,7 +166,7 @@ export default function AdminSettingsPage() {
                 <input
                   value={settings.whatsapp_number}
                   onChange={(e) => set('whatsapp_number', e.target.value)}
-                  placeholder="+919820144520"
+                  placeholder="+919033415234"
                   className={inputCls}
                 />
               </Field>

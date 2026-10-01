@@ -363,10 +363,10 @@ export const MOCK_SETTINGS: StoreSettings = {
   business_name: 'Sea Birds Luxury Textiles',
   tagline: 'Heritage handloom, ocean calm',
   address: 'Sea Birds Atelier, 14 Marina Row, Fort, Mumbai 400001',
-  phone: '+91 98201 44520',
+  phone: '+91 90334 15234',
   email: 'concierge@seabirdstextiles.in',
-  whatsapp_number: '+919820144520',
-  advisor_name: 'Master Loom Concierge',
+  whatsapp_number: '+919033415234',
+  advisor_name: 'Sea Birds',
   whatsapp_default_message: 'Hello Sea Birds, I would like to know more about your weaves.',
   ateliers: [
     { id: 'at-1', name: 'Chanderi Weaving Hub', location: 'Pranpur, Madhya Pradesh' },
