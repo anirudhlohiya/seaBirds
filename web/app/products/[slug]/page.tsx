@@ -1,8 +1,9 @@
-import { MOCK_PRODUCTS } from '../../../lib/mock';
+import { getProducts } from '../../../lib/api';
 import { ProductDetail } from './detail';
 
-export function generateStaticParams() {
-  return MOCK_PRODUCTS.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((p) => ({ slug: p.slug }));
 }
 
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
