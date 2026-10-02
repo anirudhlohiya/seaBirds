@@ -23,3 +23,5 @@ dist/
 # misc
 .DS_Store
 *.log
+
+credentials.txt

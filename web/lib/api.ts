@@ -107,8 +107,13 @@ async function publicGet<TApi, T>(
 ): Promise<T> {
   if (USE_MOCK) return fallback();
   try {
-    const joiner = path.includes('?') ? '&' : '?';
-    const res = await fetch(`${API_BASE}${path}${joiner}_t=${Date.now()}`);
+    let fetchUrl = `${API_BASE}${path}`;
+    if (typeof window === 'undefined') {
+      // Only bust cache during the Next.js static build, keep it super fast for real customers!
+      const joiner = path.includes('?') ? '&' : '?';
+      fetchUrl += `${joiner}_t=${Date.now()}`;
+    }
+    const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return map(unwrap<TApi>(await res.json()));
   } catch (err) {
