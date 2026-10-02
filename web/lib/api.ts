@@ -107,7 +107,8 @@ async function publicGet<TApi, T>(
 ): Promise<T> {
   if (USE_MOCK) return fallback();
   try {
-    const res = await fetch(`${API_BASE}${path}`);
+    const joiner = path.includes('?') ? '&' : '?';
+    const res = await fetch(`${API_BASE}${path}${joiner}_t=${Date.now()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return map(unwrap<TApi>(await res.json()));
   } catch (err) {
