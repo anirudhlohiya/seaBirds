@@ -327,22 +327,6 @@ export function ProductForm({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-hairline bg-white p-5" aria-label="Artisan story">
-        <h2 className="text-[16px] font-semibold text-ink">Artisan Story</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field label="Weaver's diary quote">
-            <textarea rows={3} value={value.artisan_quote ?? ''} onChange={(e) => set('artisan_quote', e.target.value)} className={areaCls} />
-          </Field>
-          <div className="flex flex-col gap-4">
-            <Field label="Artisan name">
-              <input value={value.artisan_name ?? ''} onChange={(e) => set('artisan_name', e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="Artisan place">
-              <input value={value.artisan_place ?? ''} onChange={(e) => set('artisan_place', e.target.value)} placeholder="Pranpur, Chanderi" className={inputCls} />
-            </Field>
-          </div>
-        </div>
-      </section>
 
       <div className="flex gap-3">
         <UiButton type="submit" disabled={busy} className="flex-1">

@@ -208,20 +208,6 @@ export function ProductDetail({ slug }: { slug: string }) {
                 ))}
               </dl>
             </div>
-
-            <figure className="mt-6 rounded-2xl bg-accentWash p-6">
-              <p className="flex items-center gap-2 text-[11px] font-semibold tracking-caps uppercase text-accent">
-                <Icon name="history_edu" className="text-lg" />
-                Master Weaver&apos;s Diary
-              </p>
-              <blockquote className="mt-3 text-[15px] italic leading-7 text-ink">
-                “{product.artisan_quote}”
-              </blockquote>
-              <figcaption className="mt-3 flex items-center justify-between text-[13px] text-muted">
-                <span className="font-medium text-ink">{product.artisan_name}</span>
-                <span>{product.artisan_place}</span>
-              </figcaption>
-            </figure>
           </div>
         </div>
 
