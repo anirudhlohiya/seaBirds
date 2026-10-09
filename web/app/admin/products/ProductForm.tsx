@@ -17,11 +17,13 @@ function Field({
   children,
   hint,
   optional,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
   hint?: string;
   optional?: boolean;
+  error?: string;
 }) {
   return (
     <div>
@@ -31,6 +33,7 @@ function Field({
         {hint && <span className="ml-2 text-[12px] font-normal text-faint">{hint}</span>}
       </label>
       {children}
+      {error && <p className="mt-1.5 text-[13px] text-error">{error}</p>}
     </div>
   );
 }
@@ -61,14 +64,18 @@ export function ProductForm({
   const router = useRouter();
   const [value, setValue] = useState<ProductFormValue>(initial);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (touched.name && !value.name?.trim()) setError('Product name is required.');
-    else if (touched.sku && !value.sku?.trim()) setError('SKU is required.');
-    else setError('');
+    const errors: Record<string, string> = {};
+    if (touched.name && !value.name?.trim()) errors.name = 'Product name is required.';
+    if (touched.sku && !value.sku?.trim()) errors.sku = 'SKU is required.';
+    
+    setFieldErrors(errors);
+    setError(Object.values(errors)[0] || '');
   }, [value.name, value.sku, touched.name, touched.sku]);
 
   useEffect(() => {
@@ -132,10 +139,12 @@ export function ProductForm({
     setError('');
     if (!value.name?.trim()) {
       setError('Product name is required.');
+      setFieldErrors({ name: 'Product name is required.' });
       return;
     }
     if (!value.sku?.trim()) {
       setError('SKU is required.');
+      setFieldErrors({ sku: 'SKU is required.' });
       return;
     }
     setBusy(true);
@@ -234,13 +243,13 @@ export function ProductForm({
       <section className="rounded-2xl border border-hairline bg-white p-5" aria-label="Basics">
         <h2 className="text-[16px] font-semibold text-ink">Basics</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field label="Product name">
+          <Field label="Product name" error={fieldErrors.name}>
             <input id="pf-name" value={value.name ?? ''} onChange={(e) => set('name', e.target.value)} placeholder="Sea Mist Chanderi Silk Saree" className={inputCls} />
           </Field>
           <Field label="Tagline" hint="short descriptor" optional>
             <input value={value.tagline ?? ''} onChange={(e) => set('tagline', e.target.value)} placeholder="with Real Silver Zari" className={inputCls} />
           </Field>
-          <Field label="SKU">
+          <Field label="SKU" error={fieldErrors.sku}>
             <input value={value.sku ?? ''} onChange={(e) => set('sku', e.target.value)} placeholder="SB-CHK-014" className={inputCls} />
           </Field>
           <Field label="URL slug">
