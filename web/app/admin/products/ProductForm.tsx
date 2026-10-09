@@ -137,16 +137,18 @@ export function ProductForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!value.name?.trim()) {
-      setError('Product name is required.');
-      setFieldErrors({ name: 'Product name is required.' });
+    
+    const errors: Record<string, string> = {};
+    if (!value.name?.trim()) errors.name = 'Product name is required.';
+    if (!value.sku?.trim()) errors.sku = 'SKU is required.';
+    
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the errors below.');
+      setTouched((prev) => ({ ...prev, name: true, sku: true }));
       return;
     }
-    if (!value.sku?.trim()) {
-      setError('SKU is required.');
-      setFieldErrors({ sku: 'SKU is required.' });
-      return;
-    }
+
     setBusy(true);
     try {
       await onSave(value);
