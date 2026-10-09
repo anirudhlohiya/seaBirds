@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from '../../../components/Icon';
 import { Toggle } from '../../../components/Toggle';
 import { UiButton } from '../../../components/UiButton';
@@ -16,15 +16,18 @@ function Field({
   label,
   children,
   hint,
+  optional,
 }: {
   label: string;
   children: React.ReactNode;
   hint?: string;
+  optional?: boolean;
 }) {
   return (
     <div>
       <label className="mb-1.5 block text-[13px] font-medium text-ink">
         {label}
+        {optional && <span className="ml-1 text-[12px] font-normal text-faint italic">(optional)</span>}
         {hint && <span className="ml-2 text-[12px] font-normal text-faint">{hint}</span>}
       </label>
       {children}
@@ -57,12 +60,30 @@ export function ProductForm({
 }) {
   const router = useRouter();
   const [value, setValue] = useState<ProductFormValue>(initial);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  const set = <K extends keyof ProductFormValue>(key: K, v: ProductFormValue[K]) =>
+  useEffect(() => {
+    if (touched.name && !value.name?.trim()) setError('Product name is required.');
+    else if (touched.sku && !value.sku?.trim()) setError('SKU is required.');
+    else setError('');
+  }, [value.name, value.sku, touched.name, touched.sku]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  const set = <K extends keyof ProductFormValue>(key: K, v: ProductFormValue[K]) => {
     setValue((prev) => ({ ...prev, [key]: v }));
+    setTouched((prev) => ({ ...prev, [key as string]: true }));
+  };
 
   const setImage = (index: number, url: string, previewUrl?: string) =>
     setValue((prev) => ({
@@ -216,7 +237,7 @@ export function ProductForm({
           <Field label="Product name">
             <input id="pf-name" value={value.name ?? ''} onChange={(e) => set('name', e.target.value)} placeholder="Sea Mist Chanderi Silk Saree" className={inputCls} />
           </Field>
-          <Field label="Tagline" hint="short descriptor">
+          <Field label="Tagline" hint="short descriptor" optional>
             <input value={value.tagline ?? ''} onChange={(e) => set('tagline', e.target.value)} placeholder="with Real Silver Zari" className={inputCls} />
           </Field>
           <Field label="SKU">
@@ -247,7 +268,7 @@ export function ProductForm({
               ))}
             </select>
           </Field>
-          <Field label="Yarn label" hint="shown on cards">
+          <Field label="Yarn label" hint="shown on cards" optional>
             <input value={value.yarn_label ?? ''} onChange={(e) => set('yarn_label', e.target.value)} placeholder="100% Pure Chanderi Silk" className={inputCls} />
           </Field>
         </div>
@@ -301,27 +322,27 @@ export function ProductForm({
       <section className="rounded-2xl border border-hairline bg-white p-5" aria-label="Specifications">
         <h2 className="text-[16px] font-semibold text-ink">Core Specifications</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field label="Fabric composition">
+          <Field label="Fabric composition" optional>
             <textarea rows={2} value={value.fabric_composition ?? ''} onChange={(e) => set('fabric_composition', e.target.value)} className={areaCls} />
           </Field>
-          <Field label="Weave & zari">
+          <Field label="Weave & zari" optional>
             <textarea rows={2} value={value.weave ?? ''} onChange={(e) => set('weave', e.target.value)} className={areaCls} />
           </Field>
-          <Field label="Dimensions">
+          <Field label="Dimensions" optional>
             <input value={value.dimensions ?? ''} onChange={(e) => set('dimensions', e.target.value)} placeholder="6.5 Meters (includes blouse 0.8m)" className={inputCls} />
           </Field>
-          <Field label="Care guidelines">
+          <Field label="Care guidelines" optional>
             <input value={value.care ?? ''} onChange={(e) => set('care', e.target.value)} className={inputCls} />
           </Field>
-          <Field label="Certifications">
+          <Field label="Certifications" optional>
             <input value={value.certifications ?? ''} onChange={(e) => set('certifications', e.target.value)} className={inputCls} />
           </Field>
-          <Field label="Origin">
+          <Field label="Origin" optional>
             <input value={value.origin ?? ''} onChange={(e) => set('origin', e.target.value)} placeholder="Madhya Pradesh Looms" className={inputCls} />
           </Field>
         </div>
         <div className="mt-4">
-          <Field label="Description">
+          <Field label="Description" optional>
             <textarea rows={3} value={value.description ?? ''} onChange={(e) => set('description', e.target.value)} className={areaCls} />
           </Field>
         </div>
