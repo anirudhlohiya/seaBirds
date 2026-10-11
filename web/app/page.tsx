@@ -68,7 +68,7 @@ export default function HomePage() {
             onSelect={goToCategory}
             options={[
               { label: 'All Collections', value: 'all' },
-              ...categories.map((c) => ({ label: c.name, value: c.slug })),
+              ...categories.filter((c) => !c.parent_id).map((c) => ({ label: c.name, value: c.slug })),
             ]}
           />
         </div>

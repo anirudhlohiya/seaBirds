@@ -73,7 +73,7 @@ export default function EnquiryPage() {
   const totalUnits = resolved.reduce((sum, l) => sum + l.qty, 0);
 
   const whatsappNumber = (settings?.whatsapp_number ?? '').replace(/\D/g, '');
-  const businessName = settings?.business_name ?? 'Sea Birds Luxury Textiles';
+  const businessName = settings?.business_name ?? 'Sea Birds';
 
   const waHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     buildWhatsAppMessage(resolved, total, name, phone, notes, businessName),

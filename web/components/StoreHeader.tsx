@@ -34,16 +34,15 @@ export function StoreHeader({
             <Icon name="arrow_back" className="text-2xl" />
           </Link>
         ) : (
-          <Link href="/" className="flex items-center gap-2" aria-label="Sea Birds home">
-            <img src="/logo.svg" alt="Sea Birds" className="h-7 w-auto" />
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Sea Birds home">
+            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-9 w-9 rounded-full object-cover" />
+            <span className="font-serif text-[18px] font-bold tracking-tight text-ink">Sea Birds</span>
           </Link>
         )}
         {title ? (
           <h1 className="flex-1 text-center text-[17px] font-semibold text-ink">{title}</h1>
         ) : (
-          <p className="flex-1 text-[11px] font-semibold tracking-caps uppercase text-muted">
-            Sea Birds Home
-          </p>
+          <span className="flex-1" />
         )}
         <nav className="flex items-center gap-4" aria-label="Quick actions">
           <Link href="/wishlist" aria-label={`Wishlist, ${wishlistCount} items`} className="relative text-ink">

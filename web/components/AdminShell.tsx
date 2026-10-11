@@ -46,11 +46,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-surface">
       <aside className="fixed left-0 top-0 hidden h-full w-60 flex-col border-r border-hairline bg-white p-5 md:flex">
-        <div className="flex items-center gap-2 px-1">
-          <img src="/logo.svg" alt="Sea Birds" className="h-8 w-auto" />
+        <div className="flex items-center gap-3 px-1">
+          <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-10 w-10 rounded-full object-cover" />
           <div>
-            <p className="text-[11px] font-semibold tracking-caps uppercase text-muted">Admin Portal</p>
-            <p className="text-[15px] font-semibold text-ink">Weave Master</p>
+            <p className="text-[16px] font-bold tracking-tight text-ink">Admin</p>
           </div>
         </div>
         <nav className="mt-8 flex flex-col gap-1" aria-label="Admin">
@@ -80,7 +79,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="md:pl-60">
         <div className="no-print flex items-center justify-between border-b border-hairline bg-white/95 px-5 py-3 backdrop-blur-md md:hidden">
-          <img src="/logo.svg" alt="Sea Birds" className="h-7 w-auto" />
+          <div className="flex items-center gap-2.5">
+            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-8 w-8 rounded-full object-cover" />
+            <span className="text-[15px] font-bold text-ink">Admin</span>
+          </div>
           <button
             type="button"
             onClick={handleLogout}

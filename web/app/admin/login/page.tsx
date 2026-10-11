@@ -29,10 +29,9 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-5">
-      <div className="w-full max-w-md rounded-3xl border border-hairline bg-white p-8 shadow-float">
-        <img src="/logo.svg" alt="Sea Birds" className="h-10 w-auto" />
-        <p className="mt-4 text-[11px] font-semibold tracking-caps uppercase text-muted">Admin Portal</p>
-        <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink">Weave Master Sign In</h1>
+      <div className="w-full max-w-md rounded-3xl border border-hairline bg-white p-8 shadow-float text-center">
+        <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="mx-auto h-16 w-16 rounded-full object-cover shadow-sm" />
+        <h1 className="mt-4 text-[26px] font-bold tracking-tight text-ink">Admin</h1>
 
         {error && (
           <p role="alert" className="mt-4 rounded-xl bg-[#ffdad6] p-3.5 text-[14px] text-error">

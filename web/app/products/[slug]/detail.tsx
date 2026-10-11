@@ -92,12 +92,25 @@ export function ProductDetail({ slug }: { slug: string }) {
       <StoreHeader title="Product Detail" showBack backHref="/products" />
 
       <div className="mx-auto max-w-6xl px-5 pt-4">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-caps text-muted">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-caps text-muted flex-wrap">
           <Link href="/products" className="hover:text-accent">
             Handloom
           </Link>
           <Icon name="chevron_right" className="text-base" />
-          <span className="text-ink">{product.category_name}</span>
+          <Link href={`/products?category=${encodeURIComponent(product.category_slug)}`} className="hover:text-accent">
+            {product.category_name}
+          </Link>
+          {product.subcategory_name && (
+            <>
+              <Icon name="chevron_right" className="text-base" />
+              <Link
+                href={`/products?category=${encodeURIComponent(product.category_slug)}&subcategory=${encodeURIComponent(product.subcategory_slug || '')}`}
+                className="hover:text-accent text-ink"
+              >
+                {product.subcategory_name}
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="mt-4 grid gap-8 md:grid-cols-2">

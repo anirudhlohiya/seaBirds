@@ -31,7 +31,7 @@ function stockBadge(product: Product) {
 export default function WishlistPage() {
   const { ids, remove } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
-  const [businessName, setBusinessName] = useState('Sea Birds Luxury Textiles');
+  const [businessName, setBusinessName] = useState('Sea Birds');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 

@@ -5,7 +5,7 @@ import './globals.css';
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Sea Birds Luxury Textiles',
+  title: 'Sea Birds',
   description: 'Heritage handloom sarees, silk yardage and artisanal textiles. Enquire via WhatsApp.',
 };
 
