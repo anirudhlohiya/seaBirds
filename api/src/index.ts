@@ -26,7 +26,14 @@ app.use(
 app.route("/api", publicRouter);
 app.route("/api/admin", adminRouter);
 
-app.notFound((c) => fail(c, "not_found", "Route not found.", 404));
+app.notFound((c) => {
+  const url = new URL(c.req.url);
+  if (!url.pathname.startsWith("/api")) {
+    const origin = (c.env?.ALLOWED_ORIGIN ?? "http://localhost:3000").replace(/\/+$/, "");
+    return c.redirect(`${origin}${url.pathname}${url.search}`, 302);
+  }
+  return fail(c, "not_found", "Route not found.", 404);
+});
 
 app.onError((err, c) => {
   console.error("Unhandled error:", err);

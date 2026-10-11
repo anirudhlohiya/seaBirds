@@ -78,6 +78,7 @@ function apiErrorMessage(text: string, fallback: string): string {
 function filterMockProducts(query: ProductQuery): Product[] {
   return MOCK_PRODUCTS.filter((p) => {
     if (query.category && p.category_slug !== query.category) return false;
+    if (query.subcategory && p.subcategory_slug !== query.subcategory) return false;
     if (query.tag === 'new' && !p.is_new) return false;
     if (query.tag === 'bestseller' && !p.is_bestseller) return false;
     if (query.stock) {
@@ -129,6 +130,7 @@ async function publicGet<TApi, T>(
 export function getProducts(query: ProductQuery = {}): Promise<Product[]> {
   const params = new URLSearchParams();
   if (query.category) params.set('category', query.category);
+  if (query.subcategory) params.set('subcategory', query.subcategory);
   if (query.search) params.set('search', query.search);
   if (query.tag) params.set('tag', query.tag);
   if (query.stock) params.set('stock', query.stock);
