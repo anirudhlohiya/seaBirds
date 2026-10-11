@@ -6,7 +6,7 @@ export const MOCK_CATEGORIES: Category[] = [];
 
 export const MOCK_SETTINGS: StoreSettings = {
   business_name: 'Sea Birds',
-  tagline: 'Handwoven luxury, delivered with care',
+  tagline: 'Luxury, delivered with care',
   address: '',
   phone: '+91 90334 15234',
   email: 'admin@seabirds.in',
