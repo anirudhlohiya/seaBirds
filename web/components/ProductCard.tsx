@@ -39,7 +39,11 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
       </div>
       <div className="p-4">
-        <p className="text-[11px] font-medium tracking-wide text-muted">{product.yarn_label}</p>
+        <p className="text-[11px] font-medium tracking-wide text-muted truncate">
+          {product.subcategory_name
+            ? `${product.category_name || 'Handloom'} • ${product.subcategory_name}`
+            : product.yarn_label || product.category_name}
+        </p>
         <Link href={`/products/${product.slug}`}>
           <h3 className="mt-1 line-clamp-2 text-[15px] font-medium leading-6 text-ink hover:text-accent">
             {product.name}

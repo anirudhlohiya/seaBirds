@@ -76,14 +76,15 @@ adminRouter.get("/dashboard", async (c) => {
 // ================================================================ products
 
 const PRODUCT_ADMIN_SELECT = `
-  p.id, p.slug, p.name, p.sku, p.category_id,
+  p.id, p.slug, p.name, p.sku, p.category_id, p.subcategory_id,
   p.fabric_composition, p.weave_detail, p.dimensions, p.care,
   p.certifications, p.price, p.mrp, p.unit, p.stock_qty,
   p.low_stock_threshold, p.is_new, p.is_bestseller,
   p.whatsapp_enabled, p.is_visible, p.tagline, p.origin,
   p.description, p.artisan_name, p.artisan_place, p.artisan_quote,
   p.made_to_order, p.created_at, p.updated_at,
-  c.name AS category_name, c.slug AS category_slug
+  c.name AS category_name, c.slug AS category_slug,
+  sub.name AS subcategory_name, sub.slug AS subcategory_slug
 `;
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -160,6 +161,21 @@ async function validateProductFields(
       const cat = await queryOne(db, "SELECT id FROM categories WHERE id = ?", category_id);
       if (!cat) return bad(`category_id ${category_id} does not exist.`);
       fields.category_id = category_id;
+    }
+  }
+  // subcategory_id
+  if (present("subcategory_id")) {
+    const raw = get("subcategory_id");
+    if (raw === null || raw === "") {
+      fields.subcategory_id = null;
+    } else {
+      const subcategory_id = asInt(raw);
+      if (subcategory_id === null || subcategory_id < 1) {
+        return bad("subcategory_id must be a positive integer or null.");
+      }
+      const subcat = await queryOne(db, "SELECT id, parent_id FROM categories WHERE id = ?", subcategory_id);
+      if (!subcat) return bad(`subcategory_id ${subcategory_id} does not exist.`);
+      fields.subcategory_id = subcategory_id;
     }
   }
   // free-text fields (nullable in the schema)
@@ -263,7 +279,7 @@ adminRouter.get("/products", async (c) => {
   const offset = (page - 1) * limit;
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
-  const from = `FROM products p LEFT JOIN categories c ON c.id = p.category_id ${whereSql}`;
+  const from = `FROM products p LEFT JOIN categories c ON c.id = p.category_id LEFT JOIN categories sub ON sub.id = p.subcategory_id ${whereSql}`;
   const totalRow = await queryOne<{ n: number }>(c.env.DB, `SELECT COUNT(*) AS n ${from}`, ...params);
   const items = await queryAll(
     c.env.DB,
@@ -285,13 +301,13 @@ adminRouter.post("/products", async (c) => {
   const res = await run(
     c.env.DB,
     `INSERT INTO products
-       (slug, name, sku, category_id, fabric_composition, weave_detail, dimensions, care,
+       (slug, name, sku, category_id, subcategory_id, fabric_composition, weave_detail, dimensions, care,
         certifications, price, mrp, unit, stock_qty, low_stock_threshold,
         is_new, is_bestseller, whatsapp_enabled, is_visible,
         tagline, origin, description, artisan_name, artisan_place, artisan_quote, made_to_order,
         created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    f.slug, f.name, f.sku ?? null, f.category_id ?? null,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    f.slug, f.name, f.sku ?? null, f.category_id ?? null, f.subcategory_id ?? null,
     f.fabric_composition ?? null, f.weave_detail ?? null, f.dimensions ?? null, f.care ?? null,
     f.certifications ?? null, f.price, f.mrp ?? null, f.unit ?? "pieces",
     f.stock_qty ?? 0, f.low_stock_threshold ?? 5,
@@ -302,7 +318,7 @@ adminRouter.post("/products", async (c) => {
   );
   const created = await queryOne(
     c.env.DB,
-    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id WHERE p.id = ?`,
+    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id LEFT JOIN categories sub ON sub.id = p.subcategory_id WHERE p.id = ?`,
     res.lastRowId
   );
   return ok(c, created, 201);
@@ -313,7 +329,7 @@ adminRouter.get("/products/:id", async (c) => {
   if (id === null) return fail(c, "invalid_param", "id must be an integer.", 400);
   const product = await queryOne<Record<string, unknown>>(
     c.env.DB,
-    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id WHERE p.id = ?`,
+    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id LEFT JOIN categories sub ON sub.id = p.subcategory_id WHERE p.id = ?`,
     id
   );
   if (!product) return fail(c, "not_found", "Product not found.", 404);
@@ -346,7 +362,7 @@ adminRouter.put("/products/:id", async (c) => {
   );
   const updated = await queryOne(
     c.env.DB,
-    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id WHERE p.id = ?`,
+    `SELECT ${PRODUCT_ADMIN_SELECT} FROM products p LEFT JOIN categories c ON c.id = p.category_id LEFT JOIN categories sub ON sub.id = p.subcategory_id WHERE p.id = ?`,
     id
   );
   return ok(c, updated);
@@ -411,10 +427,12 @@ adminRouter.delete("/products/:id/images/:imageId", async (c) => {
 adminRouter.get("/categories", async (c) => {
   const rows = await queryAll(
     c.env.DB,
-    `SELECT cat.id, cat.name, cat.slug, cat.image_url, cat.position, cat.visible_in_menu,
-            COUNT(p.id) AS product_count
+    `SELECT cat.id, cat.name, cat.slug, cat.parent_id, cat.image_url, cat.position, cat.visible_in_menu,
+            parent.name AS parent_name, parent.slug AS parent_slug,
+            COUNT(DISTINCT p.id) AS product_count
        FROM categories cat
-       LEFT JOIN products p ON p.category_id = cat.id
+       LEFT JOIN categories parent ON parent.id = cat.parent_id
+       LEFT JOIN products p ON p.category_id = cat.id OR p.subcategory_id = cat.id
       GROUP BY cat.id
       ORDER BY cat.position ASC, cat.id ASC`
   );
@@ -433,16 +451,34 @@ adminRouter.post("/categories", async (c) => {
   }
   const taken = await queryOne(c.env.DB, "SELECT id FROM categories WHERE slug = ?", slug);
   if (taken) return fail(c, "conflict", `slug '${slug}' is already in use.`, 409);
+
+  let parent_id: number | null = null;
+  if (data?.parent_id !== undefined && data.parent_id !== null && data.parent_id !== "") {
+    const pId = asInt(data.parent_id);
+    if (pId === null || pId < 1) return fail(c, "invalid_body", "parent_id must be a positive integer.", 400);
+    const parent = await queryOne(c.env.DB, "SELECT id FROM categories WHERE id = ?", pId);
+    if (!parent) return fail(c, "invalid_body", "parent_id does not exist.", 400);
+    parent_id = pId;
+  }
+
   const image_url = typeof data?.image_url === "string" && data.image_url.trim() !== "" ? data.image_url.trim() : null;
   const positionRow = await queryOne<{ m: number | null }>(c.env.DB, "SELECT MAX(position) AS m FROM categories");
   const position = asInt(data?.position) ?? (positionRow?.m ?? -1) + 1;
   const visible_in_menu = toFlag(data?.visible_in_menu, 1);
   const res = await run(
     c.env.DB,
-    "INSERT INTO categories (name, slug, image_url, position, visible_in_menu) VALUES (?, ?, ?, ?, ?)",
-    name, slug, image_url, position, visible_in_menu
+    "INSERT INTO categories (name, slug, parent_id, image_url, position, visible_in_menu) VALUES (?, ?, ?, ?, ?, ?)",
+    name, slug, parent_id, image_url, position, visible_in_menu
   );
-  const created = await queryOne(c.env.DB, "SELECT id, name, slug, image_url, position, visible_in_menu FROM categories WHERE id = ?", res.lastRowId);
+  const created = await queryOne(
+    c.env.DB,
+    `SELECT cat.id, cat.name, cat.slug, cat.parent_id, cat.image_url, cat.position, cat.visible_in_menu,
+            parent.name AS parent_name, parent.slug AS parent_slug
+       FROM categories cat
+       LEFT JOIN categories parent ON parent.id = cat.parent_id
+      WHERE cat.id = ?`,
+    res.lastRowId
+  );
   return ok(c, created, 201);
 });
 
@@ -500,6 +536,24 @@ adminRouter.put("/categories/:id", async (c) => {
     sets.push("slug = ?");
     params.push(slug);
   }
+  if (data?.parent_id !== undefined) {
+    if (data.parent_id === null || data.parent_id === "") {
+      sets.push("parent_id = ?");
+      params.push(null);
+    } else {
+      const parent_id = asInt(data.parent_id);
+      if (parent_id === null || parent_id < 1) {
+        return fail(c, "invalid_body", "parent_id must be a positive integer or null.", 400);
+      }
+      if (parent_id === id) {
+        return fail(c, "invalid_body", "A category cannot be its own parent.", 400);
+      }
+      const parent = await queryOne(c.env.DB, "SELECT id FROM categories WHERE id = ?", parent_id);
+      if (!parent) return fail(c, "invalid_body", "parent_id does not exist.", 400);
+      sets.push("parent_id = ?");
+      params.push(parent_id);
+    }
+  }
   if (data?.image_url !== undefined) {
     const v = data.image_url;
     sets.push("image_url = ?");
@@ -517,7 +571,15 @@ adminRouter.put("/categories/:id", async (c) => {
   }
   if (sets.length === 0) return fail(c, "invalid_body", "No updatable fields provided.", 400);
   await run(c.env.DB, `UPDATE categories SET ${sets.join(", ")} WHERE id = ?`, ...params, id);
-  const updated = await queryOne(c.env.DB, "SELECT id, name, slug, image_url, position, visible_in_menu FROM categories WHERE id = ?", id);
+  const updated = await queryOne(
+    c.env.DB,
+    `SELECT cat.id, cat.name, cat.slug, cat.parent_id, cat.image_url, cat.position, cat.visible_in_menu,
+            parent.name AS parent_name, parent.slug AS parent_slug
+       FROM categories cat
+       LEFT JOIN categories parent ON parent.id = cat.parent_id
+      WHERE cat.id = ?`,
+    id
+  );
   return ok(c, updated);
 });
 
@@ -526,10 +588,18 @@ adminRouter.delete("/categories/:id", async (c) => {
   if (id === null) return fail(c, "invalid_param", "id must be an integer.", 400);
   const existing = await queryOne(c.env.DB, "SELECT id FROM categories WHERE id = ?", id);
   if (!existing) return fail(c, "not_found", "Category not found.", 404);
+  const hasChildren = await queryOne<{ n: number }>(
+    c.env.DB,
+    "SELECT COUNT(*) AS n FROM categories WHERE parent_id = ?",
+    id
+  );
+  if ((hasChildren?.n ?? 0) > 0) {
+    return fail(c, "category_has_subcategories", "Category has subcategories; move or delete them first.", 409);
+  }
   const linked = await queryOne<{ n: number }>(
     c.env.DB,
-    "SELECT COUNT(*) AS n FROM products WHERE category_id = ?",
-    id
+    "SELECT COUNT(*) AS n FROM products WHERE category_id = ? OR subcategory_id = ?",
+    id, id
   );
   if ((linked?.n ?? 0) > 0) {
     return fail(c, "category_in_use", "Category has linked products; move or delete them first.", 409);
@@ -539,6 +609,23 @@ adminRouter.delete("/categories/:id", async (c) => {
 });
 
 // ================================================================ settings
+
+adminRouter.get("/settings", async (c) => {
+  const row = await queryOne<Record<string, unknown>>(
+    c.env.DB,
+    "SELECT business_name, tagline, logo_url, whatsapp_number, advisor_name, greeting, ateliers FROM store_settings WHERE id = 1"
+  );
+  if (!row) return fail(c, "not_found", "Store settings not configured.", 404);
+  let ateliers: unknown = [];
+  if (row.ateliers) {
+    try {
+      ateliers = JSON.parse(String(row.ateliers));
+    } catch {
+      ateliers = [];
+    }
+  }
+  return ok(c, { ...row, ateliers });
+});
 
 adminRouter.put("/settings", async (c) => {
   const { data, error } = await reqJson<Record<string, unknown>>(c);

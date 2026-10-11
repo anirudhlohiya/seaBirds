@@ -37,6 +37,9 @@ export interface ApiProduct {
   category_id: number | null;
   category_name: string | null;
   category_slug: string | null;
+  subcategory_id: number | null;
+  subcategory_name: string | null;
+  subcategory_slug: string | null;
   fabric_composition: string | null;
   weave_detail: string | null;
   dimensions: string | null;
@@ -67,6 +70,9 @@ export interface ApiCategory {
   id: number;
   name: string;
   slug: string;
+  parent_id: number | null;
+  parent_name?: string | null;
+  parent_slug?: string | null;
   image_url: string | null;
   position: number;
   visible_in_menu: number;
@@ -150,6 +156,9 @@ export function toProduct(p: ApiProduct): Product {
     category_id: p.category_id != null ? String(p.category_id) : '',
     category_slug: p.category_slug ?? '',
     category_name: p.category_name ?? '',
+    subcategory_id: p.subcategory_id != null ? String(p.subcategory_id) : '',
+    subcategory_slug: p.subcategory_slug ?? '',
+    subcategory_name: p.subcategory_name ?? '',
     price: p.price ?? 0,
     mrp: p.mrp ?? p.price ?? 0,
     unit: (p.unit === 'meters' ? 'meter' : 'piece') as PriceUnit,
@@ -179,6 +188,9 @@ export function toCategory(c: ApiCategory): Category {
     id: String(c.id),
     slug: c.slug,
     name: c.name,
+    parent_id: c.parent_id != null ? String(c.parent_id) : null,
+    parent_name: c.parent_name ?? null,
+    parent_slug: c.parent_slug ?? null,
     description: '',
     image_url: c.image_url ?? '',
     position: c.position ?? 0,
@@ -259,6 +271,7 @@ export function toApiProductInput(p: Partial<Product>): Record<string, unknown> 
   set('name', p.name);
   set('sku', p.sku === undefined ? undefined : p.sku || null);
   set('category_id', p.category_id === undefined ? undefined : p.category_id ? Number(p.category_id) : null);
+  set('subcategory_id', p.subcategory_id === undefined ? undefined : p.subcategory_id ? Number(p.subcategory_id) : null);
   set('fabric_composition', p.fabric_composition === undefined && p.yarn_label === undefined
     ? undefined
     : p.fabric_composition || p.yarn_label || null);
@@ -288,6 +301,7 @@ export function toApiCategoryInput(c: Partial<Category>): Record<string, unknown
   const out: Record<string, unknown> = {};
   if (c.name !== undefined) out.name = c.name;
   if (c.slug !== undefined) out.slug = c.slug;
+  if (c.parent_id !== undefined) out.parent_id = c.parent_id ? Number(c.parent_id) : null;
   if (c.image_url !== undefined) out.image_url = c.image_url || null;
   if (c.is_visible !== undefined) out.visible_in_menu = c.is_visible ? 1 : 0;
   return out;

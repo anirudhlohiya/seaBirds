@@ -17,6 +17,9 @@ export interface Product {
   category_id: string;
   category_slug: string;
   category_name: string;
+  subcategory_id?: string;
+  subcategory_slug?: string;
+  subcategory_name?: string;
   price: number;
   mrp: number;
   unit: PriceUnit;
@@ -45,6 +48,9 @@ export interface Category {
   id: string;
   slug: string;
   name: string;
+  parent_id?: string | null;
+  parent_name?: string | null;
+  parent_slug?: string | null;
   description: string;
   image_url: string;
   position: number;
@@ -102,6 +108,7 @@ export interface EnquiryLine {
 
 export interface ProductQuery {
   category?: string;
+  subcategory?: string;
   search?: string;
   tag?: 'new' | 'bestseller';
   stock?: 'in_stock' | 'low' | 'made_to_order' | 'out_of_stock';

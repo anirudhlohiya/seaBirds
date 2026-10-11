@@ -41,6 +41,7 @@ function ProductsContent() {
 
   const [search, setSearch] = useState(params.get('search') ?? '');
   const [category, setCategory] = useState(params.get('category') ?? 'all');
+  const [subcategory, setSubcategory] = useState(params.get('subcategory') ?? 'all');
   const [tag, setTag] = useState(params.get('tag') ?? 'all');
   const [sort, setSort] = useState<SortKey>('featured');
   const [showFilters, setShowFilters] = useState(false);
@@ -53,9 +54,22 @@ function ProductsContent() {
       .catch(() => undefined);
   }, []);
 
+  const mainCategories = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+
+  const activeCategoryObj = useMemo(
+    () => (category !== 'all' ? categories.find((c) => c.slug === category) : null),
+    [categories, category],
+  );
+
+  const availableSubcategories = useMemo(() => {
+    if (!activeCategoryObj) return [];
+    return categories.filter((c) => c.parent_id === activeCategoryObj.id);
+  }, [categories, activeCategoryObj]);
+
   const filtered = useMemo(() => {
     let list = products;
     if (category !== 'all') list = list.filter((p) => p.category_slug === category);
+    if (subcategory !== 'all') list = list.filter((p) => p.subcategory_slug === subcategory);
     if (tag === 'new') list = list.filter((p) => p.is_new);
     if (tag === 'bestseller') list = list.filter((p) => p.is_bestseller);
     const q = search.trim().toLowerCase();
@@ -68,12 +82,25 @@ function ProductsContent() {
       );
     }
     return sortProducts(list, sort);
-  }, [products, category, tag, search, sort]);
+  }, [products, category, subcategory, tag, search, sort]);
 
   const activeChips: { label: string; clear: () => void }[] = [];
   if (category !== 'all') {
     const cat = categories.find((c) => c.slug === category);
-    activeChips.push({ label: cat?.name ?? category, clear: () => setCategory('all') });
+    activeChips.push({
+      label: cat?.name ?? category,
+      clear: () => {
+        setCategory('all');
+        setSubcategory('all');
+      },
+    });
+  }
+  if (subcategory !== 'all') {
+    const sub = categories.find((c) => c.slug === subcategory);
+    activeChips.push({
+      label: `Sub: ${sub?.name ?? subcategory}`,
+      clear: () => setSubcategory('all'),
+    });
   }
   if (tag !== 'all') {
     activeChips.push({
@@ -155,18 +182,37 @@ function ProductsContent() {
             </div>
             <div className="mt-4">
               <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-caps text-muted">
-                Category
+                Main Category
               </p>
               <FilterChips
-                ariaLabel="Category filter"
+                ariaLabel="Main category filter"
                 active={category}
-                onSelect={setCategory}
+                onSelect={(val) => {
+                  setCategory(val);
+                  setSubcategory('all');
+                }}
                 options={[
                   { label: 'All', value: 'all' },
-                  ...categories.map((c) => ({ label: c.name, value: c.slug })),
+                  ...mainCategories.map((c) => ({ label: c.name, value: c.slug })),
                 ]}
               />
             </div>
+            {availableSubcategories.length > 0 && (
+              <div className="mt-4 border-t border-hairline/60 pt-3">
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-caps text-muted">
+                  Subcategory ({activeCategoryObj?.name})
+                </p>
+                <FilterChips
+                  ariaLabel="Subcategory filter"
+                  active={subcategory}
+                  onSelect={setSubcategory}
+                  options={[
+                    { label: 'All Subcategories', value: 'all' },
+                    ...availableSubcategories.map((c) => ({ label: c.name, value: c.slug })),
+                  ]}
+                />
+              </div>
+            )}
           </div>
         )}
 

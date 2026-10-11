@@ -12,14 +12,15 @@ function cached(c: { header: (n: string, v: string) => void }) {
 
 /** SELECT list shared by product listing + detail (joined with categories). */
 const PRODUCT_SELECT = `
-  p.id, p.slug, p.name, p.sku, p.category_id,
+  p.id, p.slug, p.name, p.sku, p.category_id, p.subcategory_id,
   p.fabric_composition, p.weave_detail, p.dimensions, p.care,
   p.certifications, p.price, p.mrp, p.unit, p.stock_qty,
   p.low_stock_threshold, p.is_new, p.is_bestseller,
   p.whatsapp_enabled, p.is_visible, p.tagline, p.origin,
   p.description, p.artisan_name, p.artisan_place, p.artisan_quote,
   p.made_to_order, p.created_at, p.updated_at,
-  c.name AS category_name, c.slug AS category_slug
+  c.name AS category_name, c.slug AS category_slug,
+  sub.name AS subcategory_name, sub.slug AS subcategory_slug
 `;
 
 async function attachImages(db: Env["DB"], productIds: number[]) {
@@ -77,6 +78,7 @@ publicRouter.get("/images/*", async (c) => {
     headers: {
       "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream",
       "Cache-Control": "public, max-age=31536000, immutable",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 });
@@ -88,8 +90,13 @@ publicRouter.get("/products", async (c) => {
 
   const category = asNonEmptyString(q.category);
   if (category) {
-    where.push("c.slug = ?");
-    params.push(category);
+    where.push("(c.slug = ? OR c.id = ?)");
+    params.push(category, asInt(category) ?? -1);
+  }
+  const subcategory = asNonEmptyString(q.subcategory);
+  if (subcategory) {
+    where.push("(sub.slug = ? OR sub.id = ?)");
+    params.push(subcategory, asInt(subcategory) ?? -1);
   }
   const search = asNonEmptyString(q.search);
   if (search) {
@@ -156,7 +163,7 @@ publicRouter.get("/products", async (c) => {
   if (limit > 100) limit = 100;
   const offset = (page - 1) * limit;
 
-  const from = `FROM products p LEFT JOIN categories c ON c.id = p.category_id WHERE ${where.join(" AND ")}`;
+  const from = `FROM products p LEFT JOIN categories c ON c.id = p.category_id LEFT JOIN categories sub ON sub.id = p.subcategory_id WHERE ${where.join(" AND ")}`;
   const totalRow = await queryOne<{ n: number }>(c.env.DB, `SELECT COUNT(*) AS n ${from}`, ...params);
   const rows = await queryAll<Record<string, unknown>>(
     c.env.DB,
@@ -180,7 +187,9 @@ publicRouter.get("/products/:slug", async (c) => {
   const row = await queryOne<Record<string, unknown>>(
     c.env.DB,
     `SELECT ${PRODUCT_SELECT}
-       FROM products p LEFT JOIN categories c ON c.id = p.category_id
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       LEFT JOIN categories sub ON sub.id = p.subcategory_id
       WHERE p.slug = ? AND p.is_visible = 1`,
     slug
   );
@@ -195,10 +204,12 @@ publicRouter.get("/products/:slug", async (c) => {
 publicRouter.get("/categories", async (c) => {
   const rows = await queryAll<Record<string, unknown>>(
     c.env.DB,
-    `SELECT cat.id, cat.name, cat.slug, cat.image_url, cat.position,
-            COUNT(p.id) AS product_count
+    `SELECT cat.id, cat.name, cat.slug, cat.parent_id, cat.image_url, cat.position,
+            parent.name AS parent_name, parent.slug AS parent_slug,
+            COUNT(DISTINCT p.id) AS product_count
        FROM categories cat
-       LEFT JOIN products p ON p.category_id = cat.id AND p.is_visible = 1
+       LEFT JOIN categories parent ON parent.id = cat.parent_id
+       LEFT JOIN products p ON (p.category_id = cat.id OR p.subcategory_id = cat.id) AND p.is_visible = 1
       WHERE cat.visible_in_menu = 1
       GROUP BY cat.id
       ORDER BY cat.position ASC, cat.id ASC`

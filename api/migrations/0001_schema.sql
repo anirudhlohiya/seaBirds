@@ -12,6 +12,7 @@ CREATE TABLE categories (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   name           TEXT NOT NULL,
   slug           TEXT NOT NULL UNIQUE,
+  parent_id      INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   image_url      TEXT,
   position       INTEGER NOT NULL DEFAULT 0,
   visible_in_menu INTEGER NOT NULL DEFAULT 1
@@ -23,6 +24,7 @@ CREATE TABLE products (
   name                TEXT NOT NULL,
   sku                 TEXT UNIQUE,
   category_id         INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  subcategory_id      INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   fabric_composition  TEXT,
   weave_detail        TEXT,
   dimensions          TEXT,
@@ -99,7 +101,9 @@ CREATE TABLE sessions (
 
 CREATE INDEX idx_products_slug          ON products(slug);
 CREATE INDEX idx_products_category      ON products(category_id);
+CREATE INDEX idx_products_subcategory   ON products(subcategory_id);
 CREATE INDEX idx_products_is_visible    ON products(is_visible);
 CREATE INDEX idx_categories_position    ON categories(position);
+CREATE INDEX idx_categories_parent      ON categories(parent_id);
 CREATE INDEX idx_product_images_product  ON product_images(product_id);
 CREATE INDEX idx_sessions_expires_at     ON sessions(expires_at);

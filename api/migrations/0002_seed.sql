@@ -8,7 +8,7 @@
 -- ------------------------------------------------------ store settings
 INSERT INTO store_settings (id, business_name, tagline, logo_url, whatsapp_number, advisor_name, greeting, ateliers) VALUES
   (1,
-   'Sea Birds Luxury Textiles',
+   'Sea Birds',
    'Handwoven luxury, delivered with care',
    NULL,
    '+919033415234',
