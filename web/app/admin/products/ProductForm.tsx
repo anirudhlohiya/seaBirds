@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../../components/Icon';
 import { Toggle } from '../../../components/Toggle';
 import { UiButton } from '../../../components/UiButton';
@@ -69,6 +69,19 @@ export function ProductForm({
   const [busy, setBusy] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
+  const mainCategories = useMemo(
+    () => categories.filter((c) => !c.parent_id),
+    [categories],
+  );
+
+  const availableSubcategories = useMemo(
+    () =>
+      value.category_id
+        ? categories.filter((c) => c.parent_id === value.category_id)
+        : categories.filter((c) => !!c.parent_id),
+    [categories, value.category_id],
+  );
+
   useEffect(() => {
     const errors: Record<string, string> = {};
     if (touched.name && !value.name?.trim()) errors.name = 'Product name is required.';
@@ -123,10 +136,12 @@ export function ProductForm({
       setError('Image must be 10MB or smaller.');
       return;
     }
+    const localPreview = URL.createObjectURL(file);
+    setImage(index, value.images[index]?.url || localPreview, localPreview);
     setUploadingIndex(index);
     try {
       const uploaded = await uploadProductImage(file);
-      setImage(index, uploaded.url, uploaded.preview_url);
+      setImage(index, uploaded.url, uploaded.preview_url || uploaded.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Image upload failed.');
     } finally {
@@ -174,24 +189,43 @@ export function ProductForm({
           Upload images straight to your R2 bucket — or paste an image URL instead.
         </p>
         <div className="mt-4 flex flex-col gap-3">
-          {value.images.map((img, i) => (
-            <div key={img.id} className="flex items-center gap-2">
-              {img.url ? (
-                <img
-                  src={img.url}
-                  alt=""
-                  className="h-14 w-11 shrink-0 rounded-lg bg-accentWash object-cover"
-                  onError={(e) => {
-                    if (img.previewUrl && e.currentTarget.src !== img.previewUrl) {
-                      e.currentTarget.src = img.previewUrl;
-                    }
-                  }}
-                />
-              ) : (
-                <span className="flex h-14 w-11 shrink-0 items-center justify-center rounded-lg bg-accentWash text-faint">
-                  <Icon name="image" className="text-xl" />
-                </span>
-              )}
+          {value.images.map((img, i) => {
+            const previewSrc = img.previewUrl || img.url;
+            return (
+              <div key={img.id} className="flex items-center gap-2">
+                {previewSrc ? (
+                  <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-accentWash border border-hairline">
+                    <img
+                      src={previewSrc}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        if (img.previewUrl && e.currentTarget.src !== img.previewUrl) {
+                          e.currentTarget.src = img.previewUrl;
+                        } else {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <span
+                      style={{ display: 'none' }}
+                      className="absolute inset-0 items-center justify-center bg-accentWash text-faint"
+                    >
+                      <Icon name="broken_image" className="text-xl" />
+                    </span>
+                    {uploadingIndex === i && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-[10px] text-white">
+                        …
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="flex h-14 w-11 shrink-0 items-center justify-center rounded-lg bg-accentWash text-faint">
+                    <Icon name="image" className="text-xl" />
+                  </span>
+                )}
               <label className="sr-only" htmlFor={`img-url-${i}`}>
                 Image {i + 1} URL
               </label>
@@ -230,7 +264,8 @@ export function ProductForm({
                 <Icon name="delete" className="text-xl" />
               </button>
             </div>
-          ))}
+            );
+          })}
           <button
             type="button"
             onClick={addImage}
@@ -257,7 +292,7 @@ export function ProductForm({
           <Field label="URL slug">
             <input value={value.slug ?? ''} onChange={(e) => set('slug', e.target.value)} placeholder="sea-mist-chanderi-silk-saree" className={inputCls} />
           </Field>
-          <Field label="Category">
+          <Field label="Main Category">
             <select
               value={value.category_id ?? ''}
               onChange={(e) => {
@@ -265,14 +300,46 @@ export function ProductForm({
                 setValue((prev) => ({
                   ...prev,
                   category_id: e.target.value,
-                  category_slug: cat?.slug ?? prev.category_slug,
-                  category_name: cat?.name ?? prev.category_name,
+                  category_slug: cat?.slug ?? '',
+                  category_name: cat?.name ?? '',
+                  subcategory_id: '',
+                  subcategory_slug: '',
+                  subcategory_name: '',
                 }));
               }}
               className={inputCls}
             >
-              <option value="">Select category…</option>
-              {categories.map((c) => (
+              <option value="">Select main category…</option>
+              {mainCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Subcategory" optional hint={value.category_id ? 'specific weave or style' : 'select main category first'}>
+            <select
+              value={value.subcategory_id ?? ''}
+              disabled={!value.category_id}
+              onChange={(e) => {
+                const sub = categories.find((c) => c.id === e.target.value);
+                setValue((prev) => ({
+                  ...prev,
+                  subcategory_id: e.target.value,
+                  subcategory_slug: sub?.slug ?? '',
+                  subcategory_name: sub?.name ?? '',
+                }));
+              }}
+              className={`${inputCls} ${!value.category_id ? 'bg-[#f7f9f8] text-muted cursor-not-allowed' : ''}`}
+            >
+              <option value="">
+                {!value.category_id
+                  ? 'Select a main category first…'
+                  : availableSubcategories.length === 0
+                    ? 'No subcategories under this category'
+                    : 'Select subcategory (optional)…'}
+              </option>
+              {availableSubcategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

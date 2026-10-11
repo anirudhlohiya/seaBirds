@@ -136,9 +136,30 @@ export default function AdminProductsPage() {
             className="rounded-2xl border border-hairline bg-white p-4 shadow-airy"
           >
             <div className="flex items-center gap-4">
-              <img src={p.images[0]?.url} alt="" className="h-16 w-14 shrink-0 rounded-xl bg-accentWash object-cover" />
+              <Link href={`/admin/products/edit?id=${p.id}`} className="shrink-0">
+                {p.images[0]?.url ? (
+                  <img
+                    src={p.images[0].url}
+                    alt={p.name}
+                    className="h-16 w-14 shrink-0 rounded-xl bg-accentWash object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const sibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (sibling) sibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span
+                  style={{ display: p.images[0]?.url ? 'none' : 'flex' }}
+                  className="h-16 w-14 shrink-0 items-center justify-center rounded-xl bg-accentWash text-faint"
+                >
+                  <Icon name="image" className="text-2xl" />
+                </span>
+              </Link>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-medium text-ink">{p.name}</p>
+                <Link href={`/admin/products/edit?id=${p.id}`}>
+                  <p className="truncate text-[15px] font-medium text-ink hover:text-accent">{p.name}</p>
+                </Link>
                 <p className="text-[12px] text-faint">SKU: {p.sku}</p>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-[15px] font-semibold text-ink">{formatINR(p.price)}</p>
@@ -149,7 +170,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <Link
-                  href={`/admin/products/${p.id}`}
+                  href={`/admin/products/edit?id=${p.id}`}
                   aria-label={`Edit ${p.name}`}
                   className="flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-accentWash hover:text-accent"
                 >

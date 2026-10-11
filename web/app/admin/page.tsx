@@ -69,8 +69,8 @@ export default function AdminDashboardPage() {
       </p>
       <div className="mt-2 flex items-center justify-between">
         <div>
-          <p className="text-[14px] text-muted">Heritage Textile Operations</p>
-          <h1 className="text-[28px] font-semibold tracking-tight text-ink">Weave Master Admin</h1>
+          <p className="text-[14px] text-muted">Operations & Management</p>
+          <h1 className="text-[28px] font-semibold tracking-tight text-ink">Admin</h1>
         </div>
       </div>
 
@@ -114,13 +114,34 @@ export default function AdminDashboardPage() {
             key={p.id}
             className="flex items-center gap-4 rounded-2xl border border-hairline bg-white p-4 shadow-airy"
           >
-            <img src={p.images[0]?.url} alt="" className="h-16 w-14 shrink-0 rounded-xl bg-accentWash object-cover" />
+            <Link href={`/admin/products/edit?id=${p.id}`} className="shrink-0">
+              {p.images[0]?.url ? (
+                <img
+                  src={p.images[0].url}
+                  alt={p.name}
+                  className="h-16 w-14 shrink-0 rounded-xl bg-accentWash object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const sibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                    if (sibling) sibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span
+                style={{ display: p.images[0]?.url ? 'none' : 'flex' }}
+                className="h-16 w-14 shrink-0 items-center justify-center rounded-xl bg-accentWash text-faint"
+              >
+                <Icon name="image" className="text-2xl" />
+              </span>
+            </Link>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap gap-1.5">
                 {p.is_new && <Badge>New</Badge>}
                 {p.is_bestseller && <Badge variant="outline">Bestseller</Badge>}
               </div>
-              <p className="mt-1 truncate text-[15px] font-medium text-ink">{p.name}</p>
+              <Link href={`/admin/products/edit?id=${p.id}`}>
+                <p className="mt-1 truncate text-[15px] font-medium text-ink hover:text-accent">{p.name}</p>
+              </Link>
               <p className="text-[12px] text-faint">SKU: {p.sku}</p>
               <div className="mt-1.5 flex items-center gap-3">
                 <p className="text-[16px] font-semibold text-ink">{formatINR(p.price)}</p>
@@ -128,7 +149,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <Link
-              href={`/admin/products/${p.id}`}
+              href={`/admin/products/edit?id=${p.id}`}
               aria-label={`Edit ${p.name}`}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-accentWash hover:text-accent"
             >
