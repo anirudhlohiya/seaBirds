@@ -68,6 +68,16 @@ export function clearEnquiry(): void {
   writeLines([]);
 }
 
+/** Prunes enquiry basket of any product IDs that no longer exist in the catalog. */
+export function pruneEnquiry(validProductIds: string[]): void {
+  const validSet = new Set(validProductIds);
+  const current = readLines();
+  const next = current.filter((line) => validSet.has(line.product_id));
+  if (next.length !== current.length) {
+    writeLines(next);
+  }
+}
+
 export function moveToEnquiry(productId: string): void {
   addToEnquiry(productId, 1);
 }

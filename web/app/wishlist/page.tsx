@@ -11,7 +11,7 @@ import { getProducts, getSettings } from '../../lib/api';
 import { formatUnitPrice } from '../../lib/format';
 import { addToEnquiry } from '../../lib/store';
 import type { Product } from '../../lib/types';
-import { useWishlist } from '../../lib/wishlist';
+import { pruneWishlist, useWishlist } from '../../lib/wishlist';
 import { downloadPdf } from '../../lib/pdf';
 import { generateWishlistPdf, slugFilename } from '../../lib/wishlistPdf';
 
@@ -36,7 +36,10 @@ export default function WishlistPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getProducts().then(setProducts).catch(() => undefined);
+    getProducts().then((p) => {
+      setProducts(p);
+      pruneWishlist(p.map((item) => item.id));
+    }).catch(() => undefined);
     getSettings().then((s) => setBusinessName(s.business_name)).catch(() => undefined);
   }, []);
 

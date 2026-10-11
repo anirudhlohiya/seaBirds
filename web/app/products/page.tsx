@@ -8,7 +8,9 @@ import { Icon } from '../../components/Icon';
 import { ProductCard } from '../../components/ProductCard';
 import { StoreHeader } from '../../components/StoreHeader';
 import { getCategories, getProducts, getSettings } from '../../lib/api';
+import { pruneEnquiry } from '../../lib/store';
 import type { Category, Product } from '../../lib/types';
+import { pruneWishlist } from '../../lib/wishlist';
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name';
 
@@ -47,7 +49,11 @@ function ProductsContent() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    getProducts().then(setProducts).catch(() => undefined);
+    getProducts().then((p) => {
+      setProducts(p);
+      pruneWishlist(p.map((item) => item.id));
+      pruneEnquiry(p.map((item) => item.id));
+    }).catch(() => undefined);
     getCategories().then(setCategories).catch(() => undefined);
     getSettings()
       .then((s) => setWhatsapp(s.whatsapp_number.replace(/\D/g, '')))

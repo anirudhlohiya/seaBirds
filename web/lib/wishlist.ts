@@ -56,6 +56,16 @@ export function clearWishlist(): void {
   writeIds([]);
 }
 
+/** Prunes wishlist of any product IDs that no longer exist in the catalog. */
+export function pruneWishlist(validProductIds: string[]): void {
+  const validSet = new Set(validProductIds);
+  const current = readIds();
+  const next = current.filter((id) => validSet.has(id));
+  if (next.length !== current.length) {
+    writeIds(next);
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key === WISHLIST_KEY) listeners.forEach((fn) => fn(readIds()));

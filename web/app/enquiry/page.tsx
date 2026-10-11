@@ -10,7 +10,7 @@ import { getProducts, getSettings } from '../../lib/api';
 import { generateEnquiryPdf, type EnquiryPdfLine } from '../../lib/enquiryPdf';
 import { formatINR, formatQty, formatUnitPrice } from '../../lib/format';
 import { downloadPdf } from '../../lib/pdf';
-import { getEnquiryLines, setEnquiryQty, removeFromEnquiry, useEnquiry } from '../../lib/store';
+import { getEnquiryLines, setEnquiryQty, removeFromEnquiry, useEnquiry, pruneEnquiry } from '../../lib/store';
 import type { Product, StoreSettings } from '../../lib/types';
 import { slugFilename } from '../../lib/wishlistPdf';
 
@@ -55,7 +55,10 @@ export default function EnquiryPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getProducts().then(setProducts).catch(() => undefined);
+    getProducts().then((p) => {
+      setProducts(p);
+      pruneEnquiry(p.map((item) => item.id));
+    }).catch(() => undefined);
     getSettings().then(setSettings).catch(() => undefined);
   }, []);
 

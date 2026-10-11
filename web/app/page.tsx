@@ -11,7 +11,9 @@ import { SectionHeader } from '../components/SectionHeader';
 import { StoreHeader } from '../components/StoreHeader';
 import { UiButton } from '../components/UiButton';
 import { getCategories, getProducts } from '../lib/api';
+import { pruneEnquiry } from '../lib/store';
 import type { Category, Product } from '../lib/types';
+import { pruneWishlist } from '../lib/wishlist';
 
 export default function HomePage() {
   const router = useRouter();
@@ -21,7 +23,11 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    getProducts().then(setProducts).catch(() => undefined);
+    getProducts().then((p) => {
+      setProducts(p);
+      pruneWishlist(p.map((item) => item.id));
+      pruneEnquiry(p.map((item) => item.id));
+    }).catch(() => undefined);
     getCategories().then(setCategories).catch(() => undefined);
   }, []);
 
