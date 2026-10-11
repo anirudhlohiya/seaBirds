@@ -105,54 +105,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="New arrivals">
-        <SectionHeader eyebrow="Curated fresh" title="New Arrivals" actionLabel="View All" actionHref="/products?tag=new" />
-        <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {newArrivals.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      {newArrivals.length > 0 && (
+        <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="New arrivals">
+          <SectionHeader eyebrow="Curated fresh" title="New Arrivals" actionLabel="View All" actionHref="/products?tag=new" />
+          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {newArrivals.slice(0, 4).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Bestsellers">
-        <SectionHeader
-          eyebrow="Artisan favorites"
-          title="Bestsellers"
-          actionLabel="View All"
-          actionHref="/products?tag=bestseller"
-        />
-        <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {bestsellers.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      {bestsellers.length > 0 && (
+        <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Bestsellers">
+          <SectionHeader
+            eyebrow="Artisan favorites"
+            title="Bestsellers"
+            actionLabel="View All"
+            actionHref="/products?tag=bestseller"
+          />
+          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {bestsellers.slice(0, 4).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Shop by craft and category">
-        <SectionHeader eyebrow="Artisanal archive" title="Shop by Craft & Category" />
-        <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/products?category=${encodeURIComponent(c.slug)}`}
-              className="group relative overflow-hidden rounded-2xl border border-hairline bg-white shadow-airy"
-            >
-              <div className="aspect-[4/3] overflow-hidden bg-accentWash">
-                <img
-                  src={c.image_url}
-                  alt={c.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-                />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-4 pt-10">
-                <p className="text-[15px] font-semibold text-white">{c.name}</p>
-                <p className="text-[12px] text-white/80">{c.product_count} products</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {categories.length > 0 && (
+        <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Shop by craft and category">
+          <SectionHeader eyebrow="Artisanal archive" title="Shop by Craft & Category" />
+          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
+            {categories.map((c) => (
+              <Link
+                key={c.id}
+                href={`/products?category=${encodeURIComponent(c.slug)}`}
+                className="group relative overflow-hidden rounded-2xl border border-hairline bg-white shadow-airy"
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-accentWash">
+                  <img
+                    src={c.image_url}
+                    alt={c.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                  />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-4 pt-10">
+                  <p className="text-[15px] font-semibold text-white">{c.name}</p>
+                  <p className="text-[12px] text-white/80">{c.product_count} products</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Wholesale catalogue">
         <div className="rounded-3xl border border-hairline bg-white p-6 shadow-airy md:p-8">

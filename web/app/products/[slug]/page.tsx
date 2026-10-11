@@ -3,6 +3,9 @@ import { ProductDetail } from './detail';
 
 export async function generateStaticParams() {
   const products = await getProducts();
+  if (!products || products.length === 0) {
+    return [{ slug: '_placeholder' }];
+  }
   return products.map((p) => ({ slug: p.slug }));
 }
 
