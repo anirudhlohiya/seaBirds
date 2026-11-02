@@ -291,12 +291,24 @@ adminRouter.get("/products", async (c) => {
   return ok(c, { items, total: totalRow?.n ?? 0, page, limit });
 });
 
+/** Next free product code: SB-101, SB-102, … (one past the highest SB-number in use). */
+async function nextSku(db: Env["DB"]): Promise<string> {
+  const row = await queryOne<{ n: number | null }>(
+    db,
+    "SELECT MAX(CAST(SUBSTR(sku, 4) AS INTEGER)) AS n FROM products WHERE sku GLOB 'SB-[0-9]*'"
+  );
+  return `SB-${Math.max(row?.n ?? 0, 100) + 1}`;
+}
+
+adminRouter.get("/products/next-sku", async (c) => ok(c, { sku: await nextSku(c.env.DB) }));
+
 adminRouter.post("/products", async (c) => {
   const { data, error } = await reqJson<Record<string, unknown>>(c);
   if (error) return error;
   const v = await validateProductFields(c.env.DB, data ?? {}, { forCreate: true });
   if (v.errorMessage) return fail(c, "invalid_body", v.errorMessage, 400);
   const f = v.fields;
+  if (!f.sku) f.sku = await nextSku(c.env.DB);
   const ts = nowSqlite();
   const res = await run(
     c.env.DB,
