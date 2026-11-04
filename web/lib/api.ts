@@ -134,7 +134,9 @@ export function getProducts(query: ProductQuery = {}): Promise<Product[]> {
   if (query.search) params.set('search', query.search);
   if (query.tag) params.set('tag', query.tag);
   if (query.stock) params.set('stock', query.stock);
-  const suffix = params.toString() ? `?${params.toString()}` : '';
+  // shortcut: one page of up to 100 (the API maximum); add paging past 100 products.
+  params.set('limit', '100');
+  const suffix = `?${params.toString()}`;
   return publicGet<{ items: ApiProduct[] }, Product[]>(
     `/api/products${suffix}`,
     () => filterMockProducts(query),
@@ -281,9 +283,14 @@ export function getDashboard(): Promise<DashboardStats> {
 // ---------------------------------------------------------------------------
 
 export function adminListProducts(): Promise<Product[]> {
-  return adminFetch<{ items: ApiProduct[] }, Product[]>('/api/admin/products', {}, (d) =>
+  // shortcut: one page of up to 100 (the API maximum); add paging past 100 products.
+  return adminFetch<{ items: ApiProduct[] }, Product[]>('/api/admin/products?limit=100', {}, (d) =>
     (d?.items ?? []).map(toProduct),
   );
+}
+
+export function adminNextSku(): Promise<string> {
+  return adminFetch<{ sku: string }, string>('/api/admin/products/next-sku', {}, (d) => d.sku);
 }
 
 export function adminGetProduct(id: string): Promise<Product> {
