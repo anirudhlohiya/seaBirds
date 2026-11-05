@@ -6,7 +6,8 @@ import { Icon } from '../../../components/Icon';
 import { Toggle } from '../../../components/Toggle';
 import { UiButton } from '../../../components/UiButton';
 import { uploadProductImage } from '../../../lib/api';
-import type { Category, PriceUnit, Product, StockStatus } from '../../../lib/types';
+import { slugify } from '../../../lib/format';
+import type { Category, PriceUnit, Product } from '../../../lib/types';
 
 export type ProductFormValue = Omit<Partial<Product>, 'images'> & {
   images: { id: string; url: string; alt_text: string; position: number; previewUrl?: string }[];
@@ -40,15 +41,6 @@ function Field({
 
 const inputCls =
   'h-12 w-full rounded-xl border border-hairline bg-white px-4 text-[15px] placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accentWash';
-const areaCls =
-  'w-full rounded-xl border border-hairline bg-white p-4 text-[15px] placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accentWash';
-
-const STOCK_OPTIONS: { value: StockStatus; label: string }[] = [
-  { value: 'in_stock', label: 'In Stock' },
-  { value: 'low', label: 'Low Stock' },
-  { value: 'made_to_order', label: 'Made to Order' },
-  { value: 'out_of_stock', label: 'Out of Stock' },
-];
 
 export function ProductForm({
   initial,
@@ -68,12 +60,13 @@ export function ProductForm({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  // Existing products keep their slug (it is in shared links); new ones follow the name until edited.
+  const [autoSlug, setAutoSlug] = useState(!initial.slug);
 
   const mainCategories = useMemo(
     () => categories.filter((c) => !c.parent_id),
     [categories],
   );
-
   const availableSubcategories = useMemo(
     () =>
       value.category_id
@@ -85,11 +78,10 @@ export function ProductForm({
   useEffect(() => {
     const errors: Record<string, string> = {};
     if (touched.name && !value.name?.trim()) errors.name = 'Product name is required.';
-    if (touched.sku && !value.sku?.trim()) errors.sku = 'SKU is required.';
     
     setFieldErrors(errors);
     setError(Object.values(errors)[0] || '');
-  }, [value.name, value.sku, touched.name, touched.sku]);
+  }, [value.name, touched.name]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -155,12 +147,11 @@ export function ProductForm({
     
     const errors: Record<string, string> = {};
     if (!value.name?.trim()) errors.name = 'Product name is required.';
-    if (!value.sku?.trim()) errors.sku = 'SKU is required.';
     
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setError('Please fix the errors below.');
-      setTouched((prev) => ({ ...prev, name: true, sku: true }));
+      setTouched((prev) => ({ ...prev, name: true }));
       return;
     }
 
@@ -281,16 +272,36 @@ export function ProductForm({
         <h2 className="text-[16px] font-semibold text-ink">Basics</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Field label="Product name" error={fieldErrors.name}>
-            <input id="pf-name" value={value.name ?? ''} onChange={(e) => set('name', e.target.value)} placeholder="Sea Mist Chanderi Silk Saree" className={inputCls} />
+            <input
+              id="pf-name"
+              value={value.name ?? ''}
+              onChange={(e) => {
+                const name = e.target.value;
+                setValue((prev) => ({ ...prev, name, ...(autoSlug ? { slug: slugify(name) } : {}) }));
+                setTouched((prev) => ({ ...prev, name: true }));
+              }}
+              placeholder="Sea Mist Chanderi Silk Saree" className={inputCls} />
           </Field>
           <Field label="Tagline" hint="short descriptor" optional>
             <input value={value.tagline ?? ''} onChange={(e) => set('tagline', e.target.value)} placeholder="with Real Silver Zari" className={inputCls} />
           </Field>
-          <Field label="SKU" error={fieldErrors.sku}>
-            <input value={value.sku ?? ''} onChange={(e) => set('sku', e.target.value)} placeholder="SB-CHK-014" className={inputCls} />
+          <Field label="SKU" hint="auto-filled, editable">
+            <input value={value.sku ?? ''} onChange={(e) => set('sku', e.target.value)} placeholder="SB-101" className={inputCls} />
           </Field>
-          <Field label="URL slug">
-            <input value={value.slug ?? ''} onChange={(e) => set('slug', e.target.value)} placeholder="sea-mist-chanderi-silk-saree" className={inputCls} />
+          <Field label="URL slug" hint="auto-filled from name, editable">
+            <input
+              value={value.slug ?? ''}
+              onChange={(e) => {
+                setAutoSlug(false);
+                set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-'));
+              }}
+              onBlur={() => {
+                // Empty slug goes back to following the name.
+                const slug = slugify(value.slug ?? '');
+                setAutoSlug(!slug);
+                set('slug', slug || slugify(value.name ?? ''));
+              }}
+              placeholder="sea-mist-chanderi-silk-saree" className={inputCls} />
           </Field>
           <Field label="Main Category">
             <select
@@ -346,9 +357,6 @@ export function ProductForm({
               ))}
             </select>
           </Field>
-          <Field label="Yarn label" hint="shown on cards" optional>
-            <input value={value.yarn_label ?? ''} onChange={(e) => set('yarn_label', e.target.value)} placeholder="100% Pure Chanderi Silk" className={inputCls} />
-          </Field>
         </div>
       </section>
 
@@ -367,26 +375,27 @@ export function ProductForm({
               <option value="meter">Meter</option>
             </select>
           </Field>
-          <Field label="Stock quantity">
-            <input type="number" min={0} value={value.stock_qty ?? ''} onChange={(e) => set('stock_qty', Number(e.target.value))} className={inputCls} />
-          </Field>
-          <Field label="Stock status">
-            <select value={value.stock_status ?? 'in_stock'} onChange={(e) => set('stock_status', e.target.value as StockStatus)} className={inputCls}>
-              {STOCK_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </Field>
         </div>
-        <div className="mt-4 flex flex-wrap gap-5">
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:gap-5">
+          <label className="flex items-center gap-2 text-[14px] text-ink">
+            <Toggle
+              checked={value.stock_status !== 'out_of_stock'}
+              onChange={(v) =>
+                setValue((prev) => ({
+                  ...prev,
+                  stock_status: v ? 'in_stock' : 'out_of_stock',
+                  stock_qty: v ? Math.max(prev.stock_qty ?? 0, 1) : 0,
+                }))
+              }
+              label="In stock"
+            />
+            In stock
+          </label>
           {(
             [
               ['is_new', 'New arrival'],
               ['is_bestseller', 'Bestseller'],
               ['is_visible', 'Visible in catalogue'],
-              ['whatsapp_enabled', 'Enable for WhatsApp Concierge'],
             ] as const
           ).map(([key, label]) => (
             <label key={key} className="flex items-center gap-2 text-[14px] text-ink">
@@ -396,36 +405,6 @@ export function ProductForm({
           ))}
         </div>
       </section>
-
-      <section className="rounded-2xl border border-hairline bg-white p-5" aria-label="Specifications">
-        <h2 className="text-[16px] font-semibold text-ink">Core Specifications</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field label="Fabric composition" optional>
-            <textarea rows={2} value={value.fabric_composition ?? ''} onChange={(e) => set('fabric_composition', e.target.value)} className={areaCls} />
-          </Field>
-          <Field label="Weave & zari" optional>
-            <textarea rows={2} value={value.weave ?? ''} onChange={(e) => set('weave', e.target.value)} className={areaCls} />
-          </Field>
-          <Field label="Dimensions" optional>
-            <input value={value.dimensions ?? ''} onChange={(e) => set('dimensions', e.target.value)} placeholder="6.5 Meters (includes blouse 0.8m)" className={inputCls} />
-          </Field>
-          <Field label="Care guidelines" optional>
-            <input value={value.care ?? ''} onChange={(e) => set('care', e.target.value)} className={inputCls} />
-          </Field>
-          <Field label="Certifications" optional>
-            <input value={value.certifications ?? ''} onChange={(e) => set('certifications', e.target.value)} className={inputCls} />
-          </Field>
-          <Field label="Origin" optional>
-            <input value={value.origin ?? ''} onChange={(e) => set('origin', e.target.value)} placeholder="Madhya Pradesh Looms" className={inputCls} />
-          </Field>
-        </div>
-        <div className="mt-4">
-          <Field label="Description" optional>
-            <textarea rows={3} value={value.description ?? ''} onChange={(e) => set('description', e.target.value)} className={areaCls} />
-          </Field>
-        </div>
-      </section>
-
 
       <div className="flex gap-3">
         <UiButton type="submit" disabled={busy} className="flex-1">
