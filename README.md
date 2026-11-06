@@ -34,6 +34,9 @@ Notes:
 - Enquiries are WhatsApp-only: the /enquiry page builds a wa.me deep link with
   the full order text; nothing is stored server-side (no enquiry tables/endpoints).
 - Wishlist is guest-only in browser localStorage (no backend).
+- SKUs are assigned automatically as SB-101, SB-102, … (`GET /api/admin/products/next-sku`
+  prefills the admin form; a blank SKU on create gets the next number). Stock is a
+  simple in / out of stock switch.
 - Catalogue PDFs are auto-generated client-side in /admin/catalogue (pdf-lib),
   uploaded to R2 via the authed upload endpoint, and listed publicly via
   GET /api/catalogue.
