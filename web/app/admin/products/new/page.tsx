@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminShell } from '../../../../components/AdminShell';
-import { adminCreateProduct, adminListCategories } from '../../../../lib/api';
+import { adminCreateProduct, adminListCategories, adminNextSku } from '../../../../lib/api';
 import type { Category } from '../../../../lib/types';
 import { ProductForm, type ProductFormValue } from '../ProductForm';
 
@@ -20,42 +20,46 @@ const EMPTY: ProductFormValue = {
   price: 0,
   mrp: 0,
   unit: 'piece',
-  stock_qty: 0,
+  stock_qty: 1,
   stock_status: 'in_stock',
   is_new: false,
   is_bestseller: false,
   is_visible: true,
   whatsapp_enabled: true,
   images: [],
-  yarn_label: '',
-  fabric_composition: '',
-  weave: '',
-  dimensions: '',
-  care: '',
-  certifications: '',
-  origin: '',
-  artisan_quote: '',
-  artisan_name: '',
-  artisan_place: '',
-  description: '',
 };
 
 export default function NewProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [initial, setInitial] = useState<ProductFormValue | null>(null);
 
   useEffect(() => {
-    adminListCategories().then(setCategories).catch(() => undefined);
+    // Either request may fail; the form still opens (the API assigns a SKU if it is left blank).
+    Promise.allSettled([adminListCategories(), adminNextSku()]).then(([cats, sku]) => {
+      const list = cats.status === 'fulfilled' ? cats.value : [];
+      const first = list.find((c) => !c.parent_id);
+      setCategories(list);
+      setInitial({
+        ...EMPTY,
+        sku: sku.status === 'fulfilled' ? sku.value : '',
+        ...(first ? { category_id: first.id, category_slug: first.slug, category_name: first.name } : {}),
+      });
+    });
   }, []);
 
   return (
     <AdminShell>
       <h1 className="mb-5 text-[26px] font-semibold tracking-tight text-ink">Add Product</h1>
-      <ProductForm
-        initial={EMPTY}
-        categories={categories}
-        submitLabel="Create Product"
-        onSave={(value) => adminCreateProduct(value).then(() => undefined)}
-      />
+      {initial ? (
+        <ProductForm
+          initial={initial}
+          categories={categories}
+          submitLabel="Create Product"
+          onSave={(value) => adminCreateProduct(value).then(() => undefined)}
+        />
+      ) : (
+        <p className="text-[14px] text-muted">Loading…</p>
+      )}
     </AdminShell>
   );
 }
