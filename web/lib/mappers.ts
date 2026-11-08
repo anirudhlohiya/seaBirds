@@ -119,9 +119,8 @@ export interface ApiDashboard {
 
 function toStockStatus(p: ApiProduct): StockStatus {
   if (p.made_to_order === 1) return 'made_to_order';
-  if ((p.stock_qty ?? 0) <= 0) return 'out_of_stock';
-  if ((p.stock_qty ?? 0) <= (p.low_stock_threshold ?? 5)) return 'low';
-  return 'in_stock';
+  // Stock is a simple in/out switch now: any quantity above zero is "in stock".
+  return (p.stock_qty ?? 0) <= 0 ? 'out_of_stock' : 'in_stock';
 }
 
 function parseCertifications(raw: string | null): string {

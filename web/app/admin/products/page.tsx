@@ -40,7 +40,7 @@ export default function AdminProductsPage() {
   const filtered = useMemo(() => {
     let list = products;
     if (category !== 'all') list = list.filter((p) => p.category_slug === category);
-    if (stock !== 'all') list = list.filter((p) => p.stock_status === stock);
+    if (stock !== 'all') list = list.filter((p) => (p.stock_status === 'out_of_stock') === (stock === 'out_of_stock'));
     const q = search.trim().toLowerCase();
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
     return list;
@@ -122,8 +122,6 @@ export default function AdminProductsPage() {
           options={[
             { label: 'All Stock', value: 'all' },
             { label: 'In Stock', value: 'in_stock' },
-            { label: 'Low', value: 'low' },
-            { label: 'Made to Order', value: 'made_to_order' },
             { label: 'Out of Stock', value: 'out_of_stock' },
           ]}
         />
@@ -163,8 +161,8 @@ export default function AdminProductsPage() {
                 <p className="text-[12px] text-faint">SKU: {p.sku}</p>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-[15px] font-semibold text-ink">{formatINR(p.price)}</p>
-                  <Badge variant={p.stock_status === 'in_stock' ? 'filled' : 'outline'}>
-                    {p.stock_status.replace('_', ' ')}
+                  <Badge variant={p.stock_status === 'out_of_stock' ? 'error' : 'filled'}>
+                    {p.stock_status === 'out_of_stock' ? 'Out of Stock' : 'In Stock'}
                   </Badge>
                 </div>
               </div>

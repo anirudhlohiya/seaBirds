@@ -19,12 +19,10 @@ function stockBadge(product: Product) {
   switch (product.stock_status) {
     case 'in_stock':
       return <Badge>In Stock</Badge>;
-    case 'low':
-      return <Badge variant="error">Low Stock</Badge>;
     case 'made_to_order':
       return <Badge variant="outline">Made to Order</Badge>;
     default:
-      return <Badge variant="error">Unavailable</Badge>;
+      return <Badge variant="error">Out of Stock</Badge>;
   }
 }
 

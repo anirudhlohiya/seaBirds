@@ -36,15 +36,9 @@ function StatCard({
 }
 
 function stockBadge(product: Product) {
-  if (product.stock_status === 'low') return <Badge variant="error">Low ({product.stock_qty} pcs)</Badge>;
-  if (product.stock_status === 'made_to_order') return <Badge variant="outline">Made to Order</Badge>;
   if (product.stock_status === 'out_of_stock') return <Badge variant="error">Out of Stock</Badge>;
-  return (
-    <Badge variant="filled">
-      In Stock ({product.stock_qty}
-      {product.unit === 'meter' ? 'm' : ''})
-    </Badge>
-  );
+  if (product.stock_status === 'made_to_order') return <Badge variant="outline">Made to Order</Badge>;
+  return <Badge variant="filled">In Stock</Badge>;
 }
 
 export default function AdminDashboardPage() {
