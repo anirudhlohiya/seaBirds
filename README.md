@@ -174,6 +174,8 @@ Rebuilding Pages after catalogue edits re-renders product pages (500 builds/mont
   images by fetching their URLs at generate time; very large catalogues (100+
   products) can take a minute in the browser — progress is shown during generation.
 - Admin login has no 2FA yet; consider WebAuthn/TOTP as a follow-up.
+- The storefront and admin list load one page of up to 100 products (the API
+  maximum); add paging before the catalogue grows past 100 products.
 - Full-text search uses `LIKE`; move to D1 FTS5 if the catalogue grows past ~10k SKUs.
 
 ## Git
