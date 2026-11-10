@@ -12,6 +12,7 @@ import {
   adminReorderCategories,
   adminUpdateCategory,
 } from '../../../lib/api';
+import { slugify } from '../../../lib/format';
 import type { Category } from '../../../lib/types';
 
 interface Draft {
@@ -34,14 +35,6 @@ const emptyDraft = (position: number, parent_id = ''): Draft => ({
 
 const inputCls =
   'h-11 w-full rounded-xl border border-hairline bg-white px-3.5 text-[14px] placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accentWash';
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -357,7 +350,7 @@ export default function AdminCategoriesPage() {
                       {renderForm(editDraft, setEditDraft, () => saveEdit(mainCat.id), 'Save Changes')}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                       {mainCat.image_url ? (
                         <img src={mainCat.image_url} alt="" className="h-12 w-12 shrink-0 rounded-xl bg-accentWash object-cover" />
                       ) : (
@@ -365,7 +358,7 @@ export default function AdminCategoriesPage() {
                           <Icon name="folder" className="text-2xl" />
                         </span>
                       )}
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-[12rem] flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="rounded-full bg-accentWash px-2 py-0.5 text-[11px] font-semibold text-accent">
                             #{mainCat.position}
@@ -380,6 +373,8 @@ export default function AdminCategoriesPage() {
                         </p>
                       </div>
 
+                      {/* On phones this group wraps to its own line under the name. */}
+                      <div className="ml-auto flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => openAddSubcategory(mainCat.id)}
@@ -434,6 +429,7 @@ export default function AdminCategoriesPage() {
                       >
                         <Icon name="delete" className="text-lg" />
                       </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -449,7 +445,7 @@ export default function AdminCategoriesPage() {
                             {renderForm(editDraft, setEditDraft, () => saveEdit(sub.id), 'Save Changes')}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             <span className="text-muted/40 font-mono text-sm">↳</span>
                             {sub.image_url ? (
                               <img src={sub.image_url} alt="" className="h-9 w-9 shrink-0 rounded-lg bg-accentWash object-cover" />
@@ -458,7 +454,7 @@ export default function AdminCategoriesPage() {
                                 <Icon name="subdirectory_arrow_right" className="text-lg" />
                               </span>
                             )}
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-[10rem] flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="rounded-full bg-accentWash/60 px-2 py-0.5 text-[10px] font-medium text-accent">
                                   Subcategory
@@ -470,7 +466,7 @@ export default function AdminCategoriesPage() {
                               </p>
                             </div>
 
-                            <label className="flex shrink-0 items-center gap-2 text-[12px] text-muted">
+                            <label className="ml-auto flex shrink-0 items-center gap-2 text-[12px] text-muted">
                               <Toggle
                                 checked={sub.is_visible}
                                 onChange={() => toggleVisible(sub)}
@@ -516,7 +512,7 @@ export default function AdminCategoriesPage() {
                     {renderForm(editDraft, setEditDraft, () => saveEdit(sub.id), 'Save Changes')}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-4">
                     {sub.image_url ? (
                       <img src={sub.image_url} alt="" className="h-11 w-11 shrink-0 rounded-xl bg-accentWash object-cover" />
                     ) : (
@@ -524,7 +520,7 @@ export default function AdminCategoriesPage() {
                         <Icon name="subdirectory_arrow_right" className="text-xl" />
                       </span>
                     )}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-[10rem] flex-1">
                       <div className="flex items-center gap-2">
                         <span className="rounded-full bg-accentWash px-2 py-0.5 text-[11px] font-medium text-accent">
                           Under: {sub.parent_name ?? 'Main'}
@@ -536,7 +532,7 @@ export default function AdminCategoriesPage() {
                       </p>
                     </div>
 
-                    <label className="flex shrink-0 items-center gap-2 text-[13px] text-muted">
+                    <label className="ml-auto flex shrink-0 items-center gap-2 text-[13px] text-muted">
                       <Toggle
                         checked={sub.is_visible}
                         onChange={() => toggleVisible(sub)}
