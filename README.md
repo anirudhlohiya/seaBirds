@@ -32,7 +32,9 @@ API on Cloudflare Workers, data in D1, images in R2, cache in KV. **Target cost:
 
 Notes:
 - Enquiries are WhatsApp-only: the /enquiry page builds a wa.me deep link with
-  the full order text; nothing is stored server-side (no enquiry tables/endpoints).
+  the full order text, including a link to each product page; the product page has
+  its own "Enquire on WhatsApp" button too. Nothing is stored server-side (no enquiry
+  tables/endpoints).
 - Wishlist is guest-only in browser localStorage (no backend).
 - SKUs are assigned automatically as SB-101, SB-102, … (`GET /api/admin/products/next-sku`
   prefills the admin form; a blank SKU on create gets the next number). Stock is a
