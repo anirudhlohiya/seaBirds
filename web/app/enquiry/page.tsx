@@ -8,7 +8,7 @@ import { StoreHeader } from '../../components/StoreHeader';
 import { UiButton } from '../../components/UiButton';
 import { getProducts, getSettings } from '../../lib/api';
 import { generateEnquiryPdf, type EnquiryPdfLine } from '../../lib/enquiryPdf';
-import { formatINR, formatQty, formatUnitPrice } from '../../lib/format';
+import { formatINR, formatQty, formatUnitPrice, productUrl } from '../../lib/format';
 import { downloadPdf } from '../../lib/pdf';
 import { getEnquiryLines, setEnquiryQty, removeFromEnquiry, useEnquiry, pruneEnquiry } from '../../lib/store';
 import type { Product, StoreSettings } from '../../lib/types';
@@ -32,6 +32,7 @@ function buildWhatsAppMessage(
     const subtotal = line.product.price * line.qty;
     parts.push(`${i + 1}. ${line.product.name}`);
     parts.push(`   SKU: ${line.product.sku}`);
+    parts.push(`   ${productUrl(line.product.slug)}`);
     parts.push(
       `   ${formatQty(line.qty, line.product.unit)} × ${formatUnitPrice(line.product.price, line.product.unit)} = ${formatINR(subtotal)}`,
     );
@@ -176,7 +177,7 @@ export default function EnquiryPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <span className="inline-block rounded-full bg-accentWash px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-caps text-accent">
-                          {product.unit === 'meter' ? 'Fabric' : product.yarn_label.split(' ')[2] ?? 'Silk'}
+                          {product.category_name || (product.unit === 'meter' ? 'Fabric' : 'Product')}
                         </span>
                         <h2 className="mt-1 truncate text-[15px] font-medium text-ink">{product.name}</h2>
                         <p className="mt-0.5 text-[12px] text-faint">Code: {product.sku}</p>
