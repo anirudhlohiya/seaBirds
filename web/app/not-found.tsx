@@ -1,9 +1,12 @@
-import Link from 'next/link';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { StoreHeader } from '../components/StoreHeader';
 import { UiButton } from '../components/UiButton';
 import { Icon } from '../components/Icon';
+import { ProductDetail } from './products/[slug]/detail';
 
-export default function NotFound() {
+function NotFoundView() {
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <StoreHeader />
@@ -35,4 +38,18 @@ export default function NotFound() {
       </main>
     </div>
   );
+}
+
+// The site is static, so products added after the last build have no page of their own yet.
+// Their links land here; load the product by its slug instead of showing a 404.
+export default function NotFound() {
+  const [slug, setSlug] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const match = window.location.pathname.match(/^\/products\/([^/]+)\/?$/);
+    setSlug(match ? decodeURIComponent(match[1]) : null);
+  }, []);
+
+  if (slug === undefined) return null;
+  return slug ? <ProductDetail slug={slug} missingView={<NotFoundView />} /> : <NotFoundView />;
 }
