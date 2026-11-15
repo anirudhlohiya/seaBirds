@@ -141,7 +141,9 @@ wrangler deploy
 #    NEXT_PUBLIC_API_URL.
 ```
 
-Rebuilding Pages after catalogue edits re-renders product pages (500 builds/month free).
+Products added after the last Pages build still open: Pages serves `404.html` for
+unknown paths, and the not-found page loads `/products/<slug>/` from the API.
+Rebuilding Pages after catalogue edits pre-renders them (500 builds/month free).
 
 ## Cost — $0/month
 
