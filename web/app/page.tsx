@@ -9,7 +9,6 @@ import { Icon } from '../components/Icon';
 import { ProductCard } from '../components/ProductCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { StoreHeader } from '../components/StoreHeader';
-import { UiButton } from '../components/UiButton';
 import { getCategories, getProducts } from '../lib/api';
 import { pruneEnquiry } from '../lib/store';
 import type { Category, Product } from '../lib/types';
@@ -80,37 +79,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      <section className="mx-auto mt-5 max-w-6xl px-5" aria-label="Featured">
-        <div className="relative overflow-hidden rounded-3xl bg-primary text-white">
-          <div
-            className="absolute inset-0 opacity-30"
-            style={{
-              background:
-                'radial-gradient(120% 120% at 15% 10%, #0D5C75 0%, transparent 55%), radial-gradient(100% 100% at 90% 90%, #0D5C75 0%, transparent 50%)',
-            }}
-            aria-hidden="true"
-          />
-          <div className="relative p-8 md:p-12">
-            <p className="text-[11px] font-semibold tracking-caps uppercase text-accentWash/80">
-              Festive Inspiration {new Date().getFullYear()}
-            </p>
-            <h2 className="mt-3 max-w-md text-[32px] font-semibold leading-10 tracking-tight md:text-[48px] md:leading-[56px]">
-              The Coastal Festive Weaves
-            </h2>
-            <p className="mt-3 max-w-md text-[15px] leading-7 text-white/80">
-              Master artisan drapes harmonizing deep ocean hues, handspun threads, and delicate
-              golden shimmer.
-            </p>
-            <div className="mt-6">
-              <UiButton variant="secondary" href="/products">
-                Explore Catalog
-                <Icon name="arrow_forward" className="text-xl" />
-              </UiButton>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {newArrivals.length > 0 && (
         <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="New arrivals">
           <SectionHeader eyebrow="Curated fresh" title="New Arrivals" actionLabel="View All" actionHref="/products?tag=new" />
@@ -166,37 +134,12 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="mx-auto mt-12 max-w-6xl px-5" aria-label="Wholesale catalogue">
-        <div className="rounded-3xl border border-hairline bg-white p-6 shadow-airy md:p-8">
-          <div className="flex items-start gap-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accentWash text-accent">
-              <Icon name="picture_as_pdf" className="text-2xl" />
-            </span>
-            <div>
-              <p className="text-[11px] font-semibold tracking-caps uppercase text-muted">
-                Wholesale & Retail
-              </p>
-              <h3 className="mt-1 text-[20px] font-semibold text-ink">
-                {new Date().getFullYear()} Comprehensive Catalogue
-              </h3>
-              <p className="mt-2 text-[14px] leading-6 text-muted">
-                Need our complete wholesale or retail price catalogue with yarn specs? Browse the
-                latest auto-generated editions.
-              </p>
-            </div>
-          </div>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <UiButton href="/catalogue" className="flex-1">
-              <Icon name="download" className="text-xl" />
-              Browse Catalogues
-            </UiButton>
-            <UiButton variant="secondary" href="/enquiry" className="flex-1">
-              <Icon name="chat" className="text-xl" />
-              Talk to Concierge
-            </UiButton>
-          </div>
-        </div>
-      </section>
+      <div className="mx-auto mt-10 max-w-6xl px-5">
+        <Link href="/catalogue" className="inline-flex items-center gap-2 text-[14px] font-medium text-accent">
+          <Icon name="download" className="text-xl" />
+          Download catalogue
+        </Link>
+      </div>
 
       <BottomNav active="/" />
     </div>
