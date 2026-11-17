@@ -35,8 +35,7 @@ export function StoreHeader({
           </Link>
         ) : (
           <Link href="/" className="flex items-center gap-2.5" aria-label="Sea Birds home">
-            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-9 w-9 rounded-full object-cover" />
-            <span className="font-serif text-[18px] font-bold tracking-tight text-ink">Sea Birds</span>
+            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-10 w-auto" />
           </Link>
         )}
         {title ? (

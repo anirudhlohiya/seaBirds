@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-5">
       <div className="w-full max-w-md rounded-3xl border border-hairline bg-white p-8 shadow-float text-center">
-        <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="mx-auto h-16 w-16 rounded-full object-cover shadow-sm" />
+        <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="mx-auto h-16 w-auto" />
         <h1 className="mt-4 text-[26px] font-bold tracking-tight text-ink">Admin</h1>
 
         {error && (

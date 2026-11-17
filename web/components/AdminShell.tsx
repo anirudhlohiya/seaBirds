@@ -47,7 +47,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-surface">
       <aside className="fixed left-0 top-0 hidden h-full w-60 flex-col border-r border-hairline bg-white p-5 md:flex">
         <div className="flex items-center gap-3 px-1">
-          <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-10 w-10 rounded-full object-cover" />
+          <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-10 w-auto" />
           <div>
             <p className="text-[16px] font-bold tracking-tight text-ink">Admin</p>
           </div>
@@ -80,7 +80,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="md:pl-60">
         <div className="no-print flex items-center justify-between border-b border-hairline bg-white/95 px-5 py-3 backdrop-blur-md md:hidden">
           <div className="flex items-center gap-2.5">
-            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-8 w-8 rounded-full object-cover" />
+            <img src="/sea_birds_logo.jpeg" alt="Sea Birds" className="h-8 w-auto" />
             <span className="text-[15px] font-bold text-ink">Admin</span>
           </div>
           <button
